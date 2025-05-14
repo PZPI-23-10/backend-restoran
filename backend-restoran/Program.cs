@@ -1,38 +1,94 @@
+using System.Text;
 using backend_restoran.Extensions;
 using backend_restoran.Persistence;
+using backend_restoran.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace backend_restoran;
 
 public static class Program
 {
-  public static void Main(string[] args)
-  {
-    var builder = WebApplication.CreateBuilder(args);
-
-    builder.Services.AddAuthorization();
-    builder.Services.AddControllers();
-
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
-    builder.Services.ConfigureDatabase(builder.Configuration);
-
-    var app = builder.Build();
-
-    var serviceScope = app.Services.CreateScope();
-    var dataContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
-    dataContext.Database.EnsureCreated();
-
-    if (app.Environment.IsDevelopment())
+    public static void Main(string[] args)
     {
-      app.UseSwagger();
-      app.UseSwaggerUI();
-    }
+        var builder = WebApplication.CreateBuilder(args);
 
-    app.UseAuthorization();
-    app.UseErrorHandler();
-    app.MapControllers();
-    
-    app.Run();
-  }
+        builder.Services.AddAuthentication(cfg =>
+        {
+            cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            cfg.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(x =>
+        {
+            x.RequireHttpsMetadata = false;
+            x.SaveToken = false;
+            x.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8
+                        .GetBytes(builder.Configuration.GetSection("JwtSettings")["AccessSecretKey"]!)
+                ),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+
+
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(options =>
+        {
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Enter jwt token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+            });
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    []
+                }
+            });
+        });
+
+        builder.Services.ConfigureDatabase(builder.Configuration);
+        builder.Services.AddSingleton<TokenService>();
+        builder.Services.AddAuthorization();
+
+        var app = builder.Build();
+
+        var serviceScope = app.Services.CreateScope();
+        var dataContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
+        dataContext.Database.EnsureCreated();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+        app.UseAuthorization();
+        app.UseAuthentication();
+        app.UseErrorHandler();
+        app.MapControllers();
+
+        app.Run();
+    }
 }
