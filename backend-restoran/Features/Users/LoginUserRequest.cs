@@ -1,7 +1,7 @@
 ﻿namespace backend_restoran.Features.Users;
 
 public record LoginUserRequest(
-    string Email,
-    string Password,
-    bool RememberMe
-    );
+  string Email,
+  string Password,
+  bool RememberMe
+);

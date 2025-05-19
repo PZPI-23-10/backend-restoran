@@ -5,8 +5,6 @@ using backend_restoran.Features.Users;
 using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
 using backend_restoran.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend_restoran.Controllers;
@@ -78,13 +76,5 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
     var accessToken = tokenService.GenerateAccessToken(user.Id.ToString(), user.Email, request.RememberMe);
 
     return Ok(new LoginUserResponse(user.Id.ToString(), accessToken.TokenKey));
-  }
-
-  [HttpGet]
-  [Route("Test")]
-  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-  public async Task<IActionResult> LoginTest()
-  {
-    return Ok(HttpContext.User.Identity.Name);
   }
 }
