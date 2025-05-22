@@ -49,9 +49,19 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Email = request.Email,
       Layout = request.RestaurantLayout,
       Moderators = moderators,
-      Tags = tags,
       City = request.City,
-      Region = request.Region
+      Region = request.Region,
+      Tags = tags,
+      Dishes = request.Dishes.Select(x => new Dish
+      {
+        Ingredients = x.Ingredients,
+        Title = x.Title,
+        Price = x.Price,
+        Quantity = x.Quantity,
+        Description = x.Description,
+        Tag = x.Tag,
+        PhotoUrl = x.PhotoUrl
+      }).ToList(),
     };
 
     var restaurantLayout = restaurant.Layout.FromJson<RestaurantLayout>();

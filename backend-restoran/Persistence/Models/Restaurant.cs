@@ -12,4 +12,5 @@ public class Restaurant : BaseEntity
   public string Layout { get; set; }
   public List<User> Moderators { get; set; } = [];
   public List<Tag> Tags { get; set; } = [];
+  public List<Dish> Dishes { get; set; } = [];
 }

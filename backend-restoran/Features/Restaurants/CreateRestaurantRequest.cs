@@ -1,4 +1,6 @@
-﻿namespace backend_restoran.Features.Restaurants;
+﻿using backend_restoran.Persistence.Models;
+
+namespace backend_restoran.Features.Restaurants;
 
 public record CreateRestaurantRequest(
   string Name,
@@ -11,4 +13,5 @@ public record CreateRestaurantRequest(
   string KitchenType,
   string[] Tags,
   string[] ModeratorIds,
-  string RestaurantLayout);
+  string RestaurantLayout,
+  DishDTO[] Dishes);
