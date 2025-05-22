@@ -11,5 +11,5 @@ public class Restaurant : BaseEntity
   public string Email { get; set; }
   public string Layout { get; set; }
   public List<User> Moderators { get; set; } = [];
-  public List<string> Tags { get; set; } = [];
+  public List<Tag> Tags { get; set; } = [];
 }

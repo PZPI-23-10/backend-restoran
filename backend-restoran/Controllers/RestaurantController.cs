@@ -35,6 +35,11 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .OfType<User>()
       .ToList();
 
+    var tags = request.Tags
+      .Select(tagName => dataContext.Tags.FirstOrDefault(x => x.Name == tagName))
+      .OfType<Tag>()
+      .ToList();
+
     var restaurant = new Restaurant
     {
       Name = request.Name,
@@ -44,7 +49,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Email = request.Email,
       Layout = request.RestaurantLayout,
       Moderators = moderators,
-      Tags = request.Tags.ToList(),
+      Tags = tags,
       City = request.City,
       Region = request.Region
     };
