@@ -5,6 +5,8 @@ public record CreateRestaurantRequest(
   string Description,
   string PhotoUrl,
   string Address,
+  string City,
+  string Region,
   string Email,
   string KitchenType,
   string[] Tags,

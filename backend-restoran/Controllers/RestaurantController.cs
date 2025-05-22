@@ -6,6 +6,7 @@ using backend_restoran.Persistence.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace backend_restoran.Controllers;
@@ -43,9 +44,11 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Email = request.Email,
       Layout = request.RestaurantLayout,
       Moderators = moderators,
-      Tags = request.Tags.ToList()
+      Tags = request.Tags.ToList(),
+      City = request.City,
+      Region = request.Region
     };
-    
+
     var restaurantLayout = restaurant.Layout.FromJson<RestaurantLayout>();
 
     for (var index = 0; index < restaurantLayout.Layout.Count; index++)
@@ -60,5 +63,16 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     await dataContext.SaveChangesAsync();
 
     return Ok();
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> GetRestaurants()
+  {
+    var restaurants = await dataContext.Restaurants
+      .Include(x => x.Moderators)
+      .Include(x => x.Tags)
+      .ToListAsync();
+
+    return Ok(restaurants);
   }
 }
