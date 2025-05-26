@@ -6,6 +6,7 @@ using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
 using backend_restoran.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend_restoran.Controllers;
 
@@ -13,6 +14,25 @@ namespace backend_restoran.Controllers;
 [Route("api/[controller]")]
 public class AccountController(DataContext dataContext, TokenService tokenService) : ControllerBase
 {
+  [HttpGet]
+  public async Task<IActionResult> GetUser([FromBody] GetUserRequest request)
+  {
+    var id = request.UserId;
+    
+    if (string.IsNullOrEmpty(id))
+      return BadRequest("User ID is required.");
+    
+    if (!Guid.TryParse(id, out var userId))
+      return BadRequest("Invalid User ID format.");
+    
+    var user = await dataContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+    
+    if (user == null)
+      return NotFound("User not found.");
+
+    return Ok(user);
+  }
+
   [HttpPost]
   [Route("Register")]
   public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
