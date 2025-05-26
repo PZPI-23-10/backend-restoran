@@ -8,4 +8,6 @@ public class User : BaseEntity
   public string Email { get; set; }
   public string Password { get; set; }
   public string Address { get; set; }
+  public List<Dish> FavoriteDishes { get; set; }
+  public List<Restaurant> FavoriteRestaraunt { get; set; }
 }
