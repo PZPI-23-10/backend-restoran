@@ -6,4 +6,5 @@ public record CreateUserRequest(
   string MiddleName,
   string Email,
   string Password,
-  string Address);
+  string Street,
+  string City);

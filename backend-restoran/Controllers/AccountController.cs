@@ -18,15 +18,15 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
   public async Task<IActionResult> GetUser([FromBody] GetUserRequest request)
   {
     var id = request.UserId;
-    
+
     if (string.IsNullOrEmpty(id))
       return BadRequest("User ID is required.");
-    
+
     if (!Guid.TryParse(id, out var userId))
       return BadRequest("Invalid User ID format.");
-    
+
     var user = await dataContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-    
+
     if (user == null)
       return NotFound("User not found.");
 
@@ -39,7 +39,8 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
   {
     if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.MiddleName) ||
         string.IsNullOrEmpty(request.LastName) || string.IsNullOrEmpty(request.Email) ||
-        string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Address))
+        string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.City) ||
+        string.IsNullOrEmpty(request.Street))
     {
       return BadRequest("All fields are required.");
     }
@@ -66,7 +67,8 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
       MiddleName = request.MiddleName,
       Email = request.Email,
       Password = Convert.ToBase64String(hashBytes),
-      Street = request.Address
+      Street = request.Street,
+      City = request.City,
     };
 
     await dataContext.Users.AddAsync(user);
