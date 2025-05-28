@@ -11,4 +11,5 @@ public class User : BaseEntity
   public string Street { get; set; }
   public List<FavouriteDish> FavoriteDishes = [];
   public List<FavouriteRestaurant> FavoriteRestaurants = [];
+  public List<Restaurant> RestaurantsOwned = [];
 }
