@@ -48,9 +48,6 @@ public class DataContext : DbContext
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
-    modelBuilder.Entity<BaseEntity>()
-      .HasKey(e => e.Id);
-
     modelBuilder.Entity<Restaurant>().HasOne(r => r.Owner)
       .WithMany()
       .HasForeignKey(r => r.OwnerId)
