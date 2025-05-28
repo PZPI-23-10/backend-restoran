@@ -20,6 +20,32 @@ public class DataContext : DbContext
   public DbSet<FavouriteDish> FavouriteDishes { get; set; }
   public DbSet<FavouriteRestaurant> FavouriteRestaurants { get; set; }
 
+  public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+  {
+    var now = DateTime.UtcNow;
+
+    foreach (var changedEntity in ChangeTracker.Entries())
+    {
+      if (changedEntity.Entity is BaseEntity entity)
+      {
+        switch (changedEntity.State)
+        {
+          case EntityState.Added:
+            entity.DateCreated = now;
+            entity.DateUpdated = now;
+            break;
+
+          case EntityState.Modified:
+            Entry(entity).Property(x => x.Id).IsModified = false;
+            entity.DateUpdated = now;
+            break;
+        }
+      }
+    }
+
+    return await base.SaveChangesAsync(cancellationToken);
+  }
+
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     ConfigureFavouriteItems(modelBuilder);

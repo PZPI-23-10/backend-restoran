@@ -66,7 +66,7 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
       MiddleName = request.MiddleName,
       Email = request.Email,
       Password = Convert.ToBase64String(hashBytes),
-      Address = request.Address
+      Street = request.Address
     };
 
     await dataContext.Users.AddAsync(user);
