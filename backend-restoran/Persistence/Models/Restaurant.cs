@@ -1,4 +1,6 @@
-﻿namespace backend_restoran.Persistence.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace backend_restoran.Persistence.Models;
 
 public class Restaurant : BaseEntity
 {
@@ -6,11 +8,18 @@ public class Restaurant : BaseEntity
   public string Description { get; set; }
   public string City { get; set; }
   public string Region { get; set; }
-  public string Address { get; set; }
+  public string Street { get; set; }
   public string PhotoUrl { get; set; }
   public string Email { get; set; }
   public string Layout { get; set; }
-  public List<User> Moderators { get; set; } = [];
-  public List<Tag> Tags { get; set; } = [];
-  public List<Dish> Dishes { get; set; } = [];
+  public string Organization { get; set; }
+
+  public List<RestaurantModerator> Moderators = [];
+  public List<RestaurantTag> Tags = [];
+  public List<Dish> Dishes = [];
+  public List<Schedule> Schedule = [];
+  public List<RestaurantCuisine> Cuisines = [];
+
+  [ForeignKey(nameof(Owner))] public Guid OwnerId { get; set; }
+  public User Owner;
 }

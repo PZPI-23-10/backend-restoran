@@ -13,60 +13,68 @@ namespace backend_restoran.Controllers;
 [Route("api/[controller]")]
 public class FavoriteController(DataContext dataContext) : ControllerBase
 {
-    [HttpPost]
-    [Route("Dish")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> AddDish(AddingFavoriteDishRequest request)
+  [HttpPost]
+  [Route("Dish")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> AddDish(AddingFavoriteDishRequest request)
+  {
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return Unauthorized("User ID not found in token.");
+
+    var user = dataContext.Users.FirstOrDefault(x => x.Id == Guid.Parse(userId));
+
+    if (user == null)
+      return NotFound("User not found.");
+
+    var dishId = request.DishId;
+    var dish = await dataContext.Dishes.FirstOrDefaultAsync(x => x.Id == Guid.Parse(dishId));
+
+    if (dish == null)
+      return NotFound("Dish not found.");
+
+    user.FavoriteDishes.Add(new FavouriteDish
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      Dish = dish,
+      User = user
+    });
 
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized("User ID not found in token.");
+    await dataContext.SaveChangesAsync();
 
-        var user = dataContext.Users.FirstOrDefault(x => x.Id == Guid.Parse(userId));
-
-        if (user == null)
-            return NotFound("User not found.");
-
-        var dishId = request.DishId;
-        var dish = await dataContext.Dishes.FirstOrDefaultAsync(x => x.Id == Guid.Parse(dishId));
-
-        if (dish == null)
-            return NotFound("Dish not found.");
-
-        user.FavoriteDishes.Add(dish);
-
-        await dataContext.SaveChangesAsync();
-
-        return Ok();
-    }
+    return Ok();
+  }
 
 
-    [HttpPost]
-    [Route("Restaurant")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public async Task<IActionResult> AddRestaurant(AddingFavoriteRestaurantRequest request)
+  [HttpPost]
+  [Route("Restaurant")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> AddRestaurant(AddingFavoriteRestaurantRequest request)
+  {
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return Unauthorized("User ID not found in token.");
+
+    var user = await dataContext.Users.FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
+
+    if (user == null)
+      return NotFound("User not found.");
+
+    var restaurantId = request.RestaurantId;
+    var restaurant = await dataContext.Restaurants.FirstOrDefaultAsync(x => x.Id == Guid.Parse(restaurantId));
+
+    if (restaurant == null)
+      return NotFound("Restaurant not found.");
+
+    user.FavoriteRestaurants.Add(new FavouriteRestaurant
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      Restaurant = restaurant,
+      User = user
+    });
 
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized("User ID not found in token.");
+    await dataContext.SaveChangesAsync();
 
-        var user = await dataContext.Users.FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
-
-        if (user == null)
-            return NotFound("User not found.");
-
-        var restaurantId = request.RestaurantId;
-        var restaurant = await dataContext.Restaurants.FirstOrDefaultAsync(x => x.Id == Guid.Parse(restaurantId));
-
-        if (restaurant == null)
-            return NotFound("Restaurant not found.");
-
-        user.FavoriteRestaraunt.Add(restaurant);
-
-        await dataContext.SaveChangesAsync();
-
-        return Ok();
-    }
+    return Ok();
+  }
 }
