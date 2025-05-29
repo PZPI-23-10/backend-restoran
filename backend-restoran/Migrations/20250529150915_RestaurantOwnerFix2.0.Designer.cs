@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend_restoran.Persistence;
@@ -11,9 +12,11 @@ using backend_restoran.Persistence;
 namespace backend_restoran.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250529150915_RestaurantOwnerFix2.0")]
+    partial class RestaurantOwnerFix20
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -206,6 +209,9 @@ namespace backend_restoran.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("PhotoUrl")
                         .IsRequired()
                         .HasColumnType("text");
@@ -218,12 +224,9 @@ namespace backend_restoran.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Restaurants");
                 });
@@ -480,13 +483,13 @@ namespace backend_restoran.Migrations
 
             modelBuilder.Entity("backend_restoran.Persistence.Models.Restaurant", b =>
                 {
-                    b.HasOne("backend_restoran.Persistence.Models.User", "User")
-                        .WithMany("RestaurantsOwned")
-                        .HasForeignKey("UserId")
+                    b.HasOne("backend_restoran.Persistence.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("backend_restoran.Persistence.Models.RestaurantCuisine", b =>
@@ -580,8 +583,6 @@ namespace backend_restoran.Migrations
                     b.Navigation("FavoriteDishes");
 
                     b.Navigation("FavoriteRestaurants");
-
-                    b.Navigation("RestaurantsOwned");
                 });
 #pragma warning restore 612, 618
         }

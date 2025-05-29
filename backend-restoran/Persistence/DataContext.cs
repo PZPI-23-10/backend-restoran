@@ -48,11 +48,7 @@ public class DataContext : DbContext
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
-    modelBuilder.Entity<Restaurant>().HasOne(r => r.User)
-      .WithMany()
-      .HasForeignKey(r => r.UserId)
-      .OnDelete(DeleteBehavior.Restrict);
-
+    ConfigureRestaurant(modelBuilder);
     ConfigureFavouriteItems(modelBuilder);
     ConfigureDishes(modelBuilder);
     ConfigureSchedule(modelBuilder);
@@ -60,6 +56,15 @@ public class DataContext : DbContext
     ConfigureRestaurantModerator(modelBuilder);
     ConfigureRestaurantTag(modelBuilder);
     ConfigureDishTag(modelBuilder);
+  }
+
+  private static void ConfigureRestaurant(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Restaurant>()
+      .HasOne(r => r.User)
+      .WithMany(u => u.RestaurantsOwned)
+      .HasForeignKey(r => r.UserId)
+      .OnDelete(DeleteBehavior.Restrict);
   }
 
   private static void ConfigureSchedule(ModelBuilder modelBuilder)

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend_restoran.Persistence;
@@ -11,9 +12,11 @@ using backend_restoran.Persistence;
 namespace backend_restoran.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250529151119_RestaurantOwnerFix3.0")]
+    partial class RestaurantOwnerFix30
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -221,9 +224,14 @@ namespace backend_restoran.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("UserId1")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Restaurants");
                 });
@@ -481,10 +489,14 @@ namespace backend_restoran.Migrations
             modelBuilder.Entity("backend_restoran.Persistence.Models.Restaurant", b =>
                 {
                     b.HasOne("backend_restoran.Persistence.Models.User", "User")
-                        .WithMany("RestaurantsOwned")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("backend_restoran.Persistence.Models.User", null)
+                        .WithMany("RestaurantsOwned")
+                        .HasForeignKey("UserId1");
 
                     b.Navigation("User");
                 });
