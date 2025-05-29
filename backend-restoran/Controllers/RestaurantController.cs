@@ -238,7 +238,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     return Ok();
   }
   
-  [HttpPost] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  [HttpPost] [Route("Editing")] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> EditRestaurant([FromBody] EditingRestaurantRequest request)
   {
     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
