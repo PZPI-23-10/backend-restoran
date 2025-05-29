@@ -206,8 +206,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     restaurant.Cuisines = cuisines;
   }
 
-  [HttpPost] [Route("Delete")] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-  public async Task<IActionResult> DeleteRestaurant([FromBody] EditingRestaurantRequest request)
+  [HttpDelete] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> DeleteRestaurant([FromBody] DeleteRestaurantRequest request)
   {
     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
