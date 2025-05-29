@@ -55,7 +55,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       PhotoUrl = request.PhotoUrl,
       Organization = request.Organization,
       Layout = request.Layout.ToJson(),
-      OwnerId = Guid.Parse(request.Owner),
+      OwnerId = Guid.Parse(userId),
     };
 
     await AddRestaurantCuisines(request, restaurant);
@@ -64,6 +64,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     await AddDishes(request, restaurant);
     AddSchedule(request, restaurant);
 
+    user.RestaurantsOwned.Add(restaurant);
+    
     await dataContext.Restaurants.AddAsync(restaurant);
     await dataContext.SaveChangesAsync();
 
@@ -202,5 +204,35 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     }
 
     restaurant.Cuisines = cuisines;
+  }
+
+  [HttpPost] [Route("Delete")] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> DeleteRestaurant([FromBody] EditingRestaurantRequest request)
+  {
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return Unauthorized("User ID not found in token.");
+
+    var user = await dataContext.Users.FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
+
+    if (user == null)
+      return NotFound("User not found.");
+    
+    var restaurant = await dataContext.Restaurants.FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
+
+    if (restaurant == null)
+    {
+      return NotFound("Restaurant not found.");
+    }
+    
+    if (restaurant.OwnerId != Guid.Parse(userId))
+    {
+      return BadRequest("User does not have permission to delete restaurant.");
+    }
+    
+    dataContext.Restaurants.Remove(restaurant);
+    await dataContext.SaveChangesAsync();
+    return Ok();
   }
 }

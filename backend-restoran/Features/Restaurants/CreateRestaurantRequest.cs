@@ -8,7 +8,6 @@ public record CreateRestaurantRequest(
   string Description,
   string Email,
   string PhotoUrl,
-  string Owner,
   string Organization,
   List<string> Cuisine,
   List<string> Tags,
