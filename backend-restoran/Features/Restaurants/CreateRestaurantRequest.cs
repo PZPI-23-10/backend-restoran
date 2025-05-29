@@ -9,6 +9,8 @@ public record CreateRestaurantRequest(
   string Email,
   string PhotoUrl,
   string Organization,
+  decimal Latitude,
+  decimal Longitude,
   List<string> Cuisine,
   List<string> Tags,
   List<string> ModeratorEmails,

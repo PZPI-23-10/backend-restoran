@@ -13,7 +13,10 @@ public class Restaurant : BaseEntity
   public string Email { get; set; }
   public string Layout { get; set; }
   public string Organization { get; set; }
-
+  
+  public decimal Latitude  { get; set; }
+  public decimal Longitude { get; set; }
+  
   public List<RestaurantModerator> Moderators = [];
   public List<RestaurantTag> Tags = [];
   public List<Dish> Dishes = [];
