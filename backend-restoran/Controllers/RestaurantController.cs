@@ -18,7 +18,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
   public async Task<IActionResult> GetRestaurants()
   {
     var restaurants = await dataContext.Restaurants
-      .Include(r => r.Owner)
+      .Include(r => r.User)
       .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
       .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
       .Include(r => r.Moderators).ThenInclude(rm => rm.User)
@@ -57,7 +57,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Latitude = request.Latitude,
       Longitude = request.Longitude,
       Layout = request.Layout.ToJson(),
-      OwnerId = Guid.Parse(userId),
+      UserId = Guid.Parse(userId),
     };
 
     await AddRestaurantCuisines(request, restaurant);
@@ -228,7 +228,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       return NotFound("Restaurant not found.");
     }
     
-    if (restaurant.OwnerId != Guid.Parse(userId))
+    if (restaurant.UserId != Guid.Parse(userId))
     {
       return BadRequest("User does not have permission to delete restaurant.");
     }
@@ -258,11 +258,13 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       return NotFound("Restaurant not found.");
     }
     
-    if (restaurant.OwnerId != Guid.Parse(userId))
+    if (restaurant.UserId != Guid.Parse(userId))
     {
       return BadRequest("User does not have permission to delete restaurant.");
     }
 
+    
+    
     restaurant.Name = request.Name;
     restaurant.City = request.City;
     restaurant.Region = request.Region;

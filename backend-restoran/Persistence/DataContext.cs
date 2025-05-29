@@ -48,9 +48,9 @@ public class DataContext : DbContext
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
-    modelBuilder.Entity<Restaurant>().HasOne(r => r.Owner)
+    modelBuilder.Entity<Restaurant>().HasOne(r => r.User)
       .WithMany()
-      .HasForeignKey(r => r.OwnerId)
+      .HasForeignKey(r => r.UserId)
       .OnDelete(DeleteBehavior.Restrict);
 
     ConfigureFavouriteItems(modelBuilder);

@@ -25,7 +25,11 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
     if (!Guid.TryParse(id, out var userId))
       return BadRequest("Invalid User ID format.");
 
-    var user = await dataContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+    var user = await dataContext.Users
+      .Include(u => u.RestaurantsOwned)
+      .Include(u => u.FavoriteRestaurants)
+      .Include(u => u.FavoriteDishes)
+      .FirstOrDefaultAsync(u => u.Id == userId);
 
     if (user == null)
       return NotFound("User not found.");

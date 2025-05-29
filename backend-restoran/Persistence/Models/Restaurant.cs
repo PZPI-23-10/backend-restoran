@@ -23,6 +23,6 @@ public class Restaurant : BaseEntity
   public List<Schedule> Schedule = [];
   public List<RestaurantCuisine> Cuisines = [];
 
-  [ForeignKey(nameof(Owner))] public Guid OwnerId { get; set; }
-  public User Owner;
+  [ForeignKey(nameof(User))] public Guid UserId { get; set; }
+  public User User;
 }

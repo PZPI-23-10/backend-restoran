@@ -9,7 +9,7 @@ public class User : BaseEntity
   public string Password { get; set; }
   public string City { get; set; }
   public string Street { get; set; }
-  public List<FavouriteDish> FavoriteDishes = [];
-  public List<FavouriteRestaurant> FavoriteRestaurants = [];
-  public List<Restaurant> RestaurantsOwned = [];
+  public List<FavouriteDish> FavoriteDishes { get; set; } = [];
+  public List<FavouriteRestaurant> FavoriteRestaurants { get; set; } = [];
+  public List<Restaurant> RestaurantsOwned { get; set; } = [];
 }
