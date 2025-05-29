@@ -14,6 +14,33 @@ namespace backend_restoran.Controllers;
 [Route("api/[controller]")]
 public class RestaurantController(DataContext dataContext) : ControllerBase
 {
+  [HttpPost]
+  [Route("Get")]
+  public async Task<IActionResult> GetRestaurant([FromBody] GetRestaurantRequest request)
+  {
+    var id = request.RestaurantId;
+
+    if (string.IsNullOrEmpty(id))
+      return BadRequest("Restaurant ID is required.");
+
+    if (!Guid.TryParse(id, out var RestaurantId))
+      return BadRequest("Invalid Restaurant ID format.");
+
+    var Restaurant = await dataContext.Restaurants
+      .Include(r => r.User)
+      .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
+      .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
+      .Include(r => r.Moderators).ThenInclude(rm => rm.User)
+      .Include(r => r.Dishes).ThenInclude(d => d.Tags).ThenInclude(dt => dt.Tag)
+      .Include(r => r.Schedule)
+      .FirstOrDefaultAsync(r => r.Id == RestaurantId);
+
+    if (Restaurant == null)
+      return NotFound("Restaurant not found.");
+
+    return Ok(Restaurant);
+  }
+  
   [HttpGet]
   public async Task<IActionResult> GetRestaurants()
   {
