@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace backend_restoran.Persistence.Models;
 
@@ -8,5 +9,5 @@ public class DishTag : BaseEntity
   public Dish Dish;
 
   [ForeignKey(nameof(Tag))] public Guid TagId { get; set; }
-  public Tag Tag;
+  [JsonInclude] public Tag Tag;
 }

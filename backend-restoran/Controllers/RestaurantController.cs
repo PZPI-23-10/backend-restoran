@@ -23,24 +23,24 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     if (string.IsNullOrEmpty(id))
       return BadRequest("Restaurant ID is required.");
 
-    if (!Guid.TryParse(id, out var RestaurantId))
+    if (!Guid.TryParse(id, out var restaurantId))
       return BadRequest("Invalid Restaurant ID format.");
 
-    var Restaurant = await dataContext.Restaurants
+    var restaurant = await dataContext.Restaurants
       .Include(r => r.User)
       .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
       .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
       .Include(r => r.Moderators).ThenInclude(rm => rm.User)
       .Include(r => r.Dishes).ThenInclude(d => d.Tags).ThenInclude(dt => dt.Tag)
       .Include(r => r.Schedule)
-      .FirstOrDefaultAsync(r => r.Id == RestaurantId);
+      .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
-    if (Restaurant == null)
+    if (restaurant == null)
       return NotFound("Restaurant not found.");
-
-    return Ok(Restaurant);
+    
+    return Ok(restaurant);
   }
-  
+
   [HttpGet]
   public async Task<IActionResult> GetRestaurants()
   {
@@ -94,7 +94,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     AddSchedule(request, restaurant);
 
     user.RestaurantsOwned.Add(restaurant);
-    
+
     await dataContext.Restaurants.AddAsync(restaurant);
     await dataContext.SaveChangesAsync();
 
@@ -235,7 +235,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     restaurant.Cuisines = cuisines;
   }
 
-  [HttpDelete] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  [HttpDelete]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> DeleteRestaurant([FromBody] DeleteRestaurantRequest request)
   {
     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -247,25 +248,27 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
     if (user == null)
       return NotFound("User not found.");
-    
+
     var restaurant = await dataContext.Restaurants.FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
 
     if (restaurant == null)
     {
       return NotFound("Restaurant not found.");
     }
-    
+
     if (restaurant.UserId != Guid.Parse(userId))
     {
       return BadRequest("User does not have permission to delete restaurant.");
     }
-    
+
     dataContext.Restaurants.Remove(restaurant);
     await dataContext.SaveChangesAsync();
     return Ok();
   }
-  
-  [HttpPost] [Route("Editing")] [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
+  [HttpPost]
+  [Route("Editing")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> EditRestaurant([FromBody] EditingRestaurantRequest request)
   {
     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -277,21 +280,20 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
     if (user == null)
       return NotFound("User not found.");
-    
+
     var restaurant = await dataContext.Restaurants.FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
 
     if (restaurant == null)
     {
       return NotFound("Restaurant not found.");
     }
-    
+
     if (restaurant.UserId != Guid.Parse(userId))
     {
       return BadRequest("User does not have permission to delete restaurant.");
     }
 
-    
-    
+
     restaurant.Name = request.Name;
     restaurant.City = request.City;
     restaurant.Region = request.Region;
@@ -303,13 +305,13 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     restaurant.Latitude = request.Latitude;
     restaurant.Longitude = request.Longitude;
     restaurant.Layout = request.Layout.ToJson();
-    
+
     await EditingRestaurantCuisines(request, restaurant);
     await EditingRestaurantTags(request, restaurant);
     await UpdateRestaurantModerators(request, restaurant);
     await UpdateDishes(request, restaurant);
     UpdateSchedule(request, restaurant);
-    
+
     await dataContext.SaveChangesAsync();
     return Ok();
   }
@@ -317,7 +319,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
   private async Task EditingRestaurantCuisines(EditingRestaurantRequest request, Restaurant restaurant)
   {
     dataContext.RestaurantCuisines.RemoveRange(restaurant.Cuisines);
-    
+
     var cuisines = new List<RestaurantCuisine>();
     foreach (var cuisineName in request.Cuisine.Where(cuisineName => !string.IsNullOrWhiteSpace(cuisineName)))
     {
@@ -328,21 +330,21 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         cuisine = new Cuisine { Name = cuisineName };
         dataContext.Cuisines.Add(cuisine);
       }
-      
+
       cuisines.Add(new RestaurantCuisine
       {
         RestaurantId = restaurant.Id,
         CuisineId = cuisine.Id
       });
     }
-    
+
     restaurant.Cuisines = cuisines;
   }
-  
+
   private async Task EditingRestaurantTags(EditingRestaurantRequest request, Restaurant restaurant)
   {
     dataContext.RestaurantTags.RemoveRange(restaurant.Tags);
-    
+
     var tags = new List<RestaurantTag>();
     foreach (var tagName in request.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
     {
@@ -353,22 +355,22 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         tag = new Tag() { Name = tagName };
         dataContext.Tags.Add(tag);
       }
-      
+
       tags.Add(new RestaurantTag
       {
         RestaurantId = restaurant.Id,
         TagId = tag.Id
       });
     }
-    
+
     restaurant.Tags = tags;
   }
-  
-  
+
+
   private async Task UpdateRestaurantModerators(EditingRestaurantRequest request, Restaurant restaurant)
   {
     dataContext.RestaurantModerators.RemoveRange(restaurant.Moderators);
-    
+
     var moderators = new List<RestaurantModerator>();
     foreach (var email in request.ModeratorEmails.Where(e => !string.IsNullOrWhiteSpace(e)))
     {
@@ -383,16 +385,17 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         UserId = moderator.Id
       });
     }
-    
+
     restaurant.Moderators = moderators;
   }
-  
+
   private async Task UpdateDishes(EditingRestaurantRequest request, Restaurant restaurant)
   {
     foreach (var dish in restaurant.Dishes)
     {
       dataContext.DishTags.RemoveRange(dish.Tags);
     }
+
     dataContext.Dishes.RemoveRange(restaurant.Dishes);
 
     var dishes = new List<Dish>();
@@ -430,14 +433,14 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       dish.Tags = dishTags;
       dishes.Add(dish);
     }
-    
+
     restaurant.Dishes = dishes;
   }
 
   private void UpdateSchedule(EditingRestaurantRequest request, Restaurant restaurant)
   {
     dataContext.Schedules.RemoveRange(restaurant.Schedule);
-    
+
     var schedules = request.Schedule.Select(s => new Schedule
     {
       Day = s.Day,
@@ -446,8 +449,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Close = s.Close,
       RestaurantId = restaurant.Id,
     }).ToList();
-    
+
     restaurant.Schedule = schedules;
   }
-  
 }

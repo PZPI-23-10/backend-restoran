@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using backend_restoran.Extensions;
 using backend_restoran.Persistence;
 using backend_restoran.Services;
@@ -37,7 +38,11 @@ public static class Program
     });
 
 
-    builder.Services.AddControllers();
+    builder.Services.AddControllers().AddJsonOptions(options =>
+    {
+      options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
