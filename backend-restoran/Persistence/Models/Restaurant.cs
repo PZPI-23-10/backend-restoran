@@ -17,11 +17,11 @@ public class Restaurant : BaseEntity
   public decimal Latitude  { get; set; }
   public decimal Longitude { get; set; }
   
-  public List<RestaurantModerator> Moderators = [];
-  public List<RestaurantTag> Tags = [];
-  public List<Dish> Dishes = [];
-  public List<Schedule> Schedule = [];
-  public List<RestaurantCuisine> Cuisines = [];
+  public List<RestaurantModerator> Moderators { get; set; } = new();
+  public List<RestaurantTag> Tags { get; set; } = new();
+  public List<Dish> Dishes { get; set; } = new();
+  public List<Schedule> Schedule { get; set; } = new();
+  public List<RestaurantCuisine> Cuisines { get; set; } = new();
 
   [ForeignKey(nameof(User))] public Guid UserId { get; set; }
   public User User;
