@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace backend_restoran.Persistence.Models;
 
@@ -8,5 +9,5 @@ public class RestaurantCuisine : BaseEntity
   public Restaurant Restaurant;
 
   [ForeignKey(nameof(Cuisine))] public Guid CuisineId { get; set; }
-  public Cuisine Cuisine;
+  [JsonInclude] public Cuisine Cuisine;
 }
