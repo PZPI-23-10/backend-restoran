@@ -9,7 +9,6 @@ public class Restaurant : BaseEntity
   public string City { get; set; }
   public string Region { get; set; }
   public string Street { get; set; }
-  public string PhotoUrl { get; set; }
   public string Email { get; set; }
   public string Layout { get; set; }
   public string Organization { get; set; }

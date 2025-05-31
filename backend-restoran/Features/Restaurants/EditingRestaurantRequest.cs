@@ -8,7 +8,6 @@ public record EditingRestaurantRequest(
     string Street,
     string Description,
     string Email,
-    string PhotoUrl,
     string Organization,
     decimal Latitude,
     decimal Longitude,
