@@ -31,13 +31,13 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
       .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
       .Include(r => r.Moderators).ThenInclude(rm => rm.User)
-      .Include(r => r.Dishes).ThenInclude(d => d.Tags).ThenInclude(dt => dt.Tag)
+      .Include(r => r.Dishes)
       .Include(r => r.Schedule)
       .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
     if (restaurant == null)
       return NotFound("Restaurant not found.");
-    
+
     return Ok(restaurant);
   }
 
@@ -49,7 +49,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
       .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
       .Include(r => r.Moderators).ThenInclude(rm => rm.User)
-      .Include(r => r.Dishes).ThenInclude(d => d.Tags).ThenInclude(dt => dt.Tag)
+      .Include(r => r.Dishes)
       .Include(r => r.Schedule)
       .ToListAsync();
 
@@ -85,8 +85,12 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Longitude = request.Longitude,
       Layout = request.Layout.ToJson(),
       UserId = Guid.Parse(userId),
+      HasParking = request.HasParking,
+      Accessible = request.Accessible,
     };
 
+    await AddRestaurantPhotos(request, restaurant);
+    await AddRestaurantDressCodes(request, restaurant);
     await AddRestaurantCuisines(request, restaurant);
     await AddRestaurantTags(request, restaurant);
     await AddRestaurantModerators(request, restaurant);
@@ -99,6 +103,42 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     await dataContext.SaveChangesAsync();
 
     return Ok();
+  }
+
+  private async Task AddRestaurantPhotos(CreateRestaurantRequest request, Restaurant restaurant)
+  {
+    var photos = new List<RestaurantPhoto>();
+    foreach (var photoUrl in request.Gallery.Where(url => !string.IsNullOrWhiteSpace(url)))
+    {
+      photos.Add(new RestaurantPhoto
+      {
+        RestaurantId = restaurant.Id,
+        Url = photoUrl
+      });
+    }
+
+    restaurant.Photos = photos;
+  }
+
+  private async Task AddRestaurantDressCodes(CreateRestaurantRequest request, Restaurant restaurant)
+  {
+    var dressCodes = new List<RestaurantDressCode>();
+    foreach (var tagName in request.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
+    {
+      var dressCode = await dataContext.Tags
+        .FirstOrDefaultAsync(t => t.Name == tagName);
+
+      if (dressCode == null)
+        continue;
+
+      dressCodes.Add(new RestaurantDressCode()
+      {
+        RestaurantId = restaurant.Id,
+        DressCodeId = dressCode.Id
+      });
+    }
+
+    restaurant.DressCodes = dressCodes;
   }
 
   private static void AddSchedule(CreateRestaurantRequest request, Restaurant restaurant)
@@ -131,29 +171,6 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         RestaurantId = restaurant.Id,
       };
 
-      var dishTags = new List<DishTag>();
-      foreach (var tagName in dishDto.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
-      {
-        var tag = await dataContext.Tags
-          .FirstOrDefaultAsync(t => t.Name == tagName);
-
-        if (tag == null)
-        {
-          tag = new Tag
-          {
-            Name = tagName,
-          };
-          dataContext.Tags.Add(tag);
-        }
-
-        dishTags.Add(new DishTag
-        {
-          DishId = dish.Id,
-          TagId = tag.Id
-        });
-      }
-
-      dish.Tags = dishTags;
       dishes.Add(dish);
     }
 
@@ -188,14 +205,9 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     {
       var tag = await dataContext.Tags
         .FirstOrDefaultAsync(t => t.Name == tagName);
+
       if (tag == null)
-      {
-        tag = new Tag
-        {
-          Name = tagName,
-        };
-        dataContext.Tags.Add(tag);
-      }
+        continue;
 
       tags.Add(new RestaurantTag
       {
@@ -216,14 +228,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         .FirstOrDefaultAsync(c => c.Name == cuisineName);
 
       if (cuisine == null)
-      {
-        cuisine = new Cuisine
-        {
-          Name = cuisineName,
-        };
-
-        dataContext.Cuisines.Add(cuisine);
-      }
+        continue;
 
       cuisines.Add(new RestaurantCuisine
       {
@@ -391,11 +396,6 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
   private async Task UpdateDishes(EditingRestaurantRequest request, Restaurant restaurant)
   {
-    foreach (var dish in restaurant.Dishes)
-    {
-      dataContext.DishTags.RemoveRange(dish.Tags);
-    }
-
     dataContext.Dishes.RemoveRange(restaurant.Dishes);
 
     var dishes = new List<Dish>();
@@ -411,26 +411,6 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         RestaurantId = restaurant.Id,
       };
 
-      var dishTags = new List<DishTag>();
-      foreach (var tagName in dishDto.Tags.Where(t => !string.IsNullOrWhiteSpace(t)))
-      {
-        var tag = await dataContext.Tags
-          .FirstOrDefaultAsync(t => t.Name == tagName);
-
-        if (tag == null)
-        {
-          tag = new Tag { Name = tagName };
-          dataContext.Tags.Add(tag);
-        }
-
-        dishTags.Add(new DishTag
-        {
-          DishId = dish.Id,
-          TagId = tag.Id
-        });
-      }
-
-      dish.Tags = dishTags;
       dishes.Add(dish);
     }
 

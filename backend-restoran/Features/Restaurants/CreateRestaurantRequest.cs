@@ -6,26 +6,28 @@ public record CreateRestaurantRequest(
   string Region,
   string Street,
   string Description,
-  string Email,
   string PhotoUrl,
-  string Organization,
   decimal Latitude,
   decimal Longitude,
+  bool HasParking,
+  bool Accessible,
+  List<string> DressCode,
+  List<string> Gallery,
   List<string> Cuisine,
   List<string> Tags,
   List<string> ModeratorEmails,
   List<DishDto> Dishes,
   List<LayoutItem> Layout,
-  List<ScheduleItemDto> Schedule
-);
+  List<ScheduleItemDto> Schedule,
+  string Organization = "",
+  string Email = "");
 
 public record DishDto(
   string PhotoUrl,
   string Name,
   string Ingredients,
   int Price,
-  int Weight,
-  List<string> Tags
+  int Weight
 );
 
 public record LayoutItem(

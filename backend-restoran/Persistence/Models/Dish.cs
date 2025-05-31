@@ -9,7 +9,6 @@ public class Dish : BaseEntity
   public decimal Price { get; set; }
   public decimal Weight { get; set; }
   public string Ingredients { get; set; }
-  public List<DishTag> Tags { get; set; } = [];
 
   [ForeignKey(nameof(Restaurant))] public Guid RestaurantId { get; set; }
   public Restaurant Restaurant;

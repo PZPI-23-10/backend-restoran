@@ -13,16 +13,21 @@ public class Restaurant : BaseEntity
   public string Email { get; set; }
   public string Layout { get; set; }
   public string Organization { get; set; }
-  
-  public decimal Latitude  { get; set; }
+
+  public decimal Latitude { get; set; }
   public decimal Longitude { get; set; }
-  
-  public List<RestaurantModerator> Moderators { get; set; } = new();
-  public List<RestaurantTag> Tags { get; set; } = new();
-  public List<Dish> Dishes { get; set; } = new();
-  public List<Schedule> Schedule { get; set; } = new();
-  public List<RestaurantCuisine> Cuisines { get; set; } = new();
+
+  public bool HasParking { get; set; }
+  public bool Accessible { get; set; }
+  public List<RestaurantModerator> Moderators { get; set; } = [];
+  public List<RestaurantTag> Tags { get; set; } = [];
+  public List<Dish> Dishes { get; set; } = [];
+  public List<Schedule> Schedule { get; set; } = [];
+  public List<RestaurantCuisine> Cuisines { get; set; } = [];
+  public List<RestaurantDressCode> DressCodes { get; set; } = [];
+  public List<RestaurantPhoto> Photos { get; set; } = [];
 
   [ForeignKey(nameof(User))] public Guid UserId { get; set; }
+
   public User User;
 }

@@ -10,10 +10,11 @@ public class DataContext : DbContext
   public DbSet<User> Users { get; set; }
   public DbSet<Tag> Tags { get; set; }
   public DbSet<Dish> Dishes { get; set; }
-  public DbSet<DishTag> DishTags { get; set; }
   public DbSet<Cuisine> Cuisines { get; set; }
+  public DbSet<DressCode> DressCodes { get; set; }
   public DbSet<Restaurant> Restaurants { get; set; }
   public DbSet<RestaurantCuisine> RestaurantCuisines { get; set; }
+  public DbSet<RestaurantDressCode> RestaurantDressCodes { get; set; }
   public DbSet<RestaurantModerator> RestaurantModerators { get; set; }
   public DbSet<RestaurantTag> RestaurantTags { get; set; }
   public DbSet<Schedule> Schedules { get; set; }
@@ -53,9 +54,19 @@ public class DataContext : DbContext
     ConfigureDishes(modelBuilder);
     ConfigureSchedule(modelBuilder);
     ConfigureRestaurantCuisine(modelBuilder);
+    ConfigureRestaurantDressCodes(modelBuilder);
+    ConfigureRestaurantPhotos(modelBuilder);
     ConfigureRestaurantModerator(modelBuilder);
     ConfigureRestaurantTag(modelBuilder);
-    ConfigureDishTag(modelBuilder);
+  }
+
+  private static void ConfigureRestaurantPhotos(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<RestaurantPhoto>()
+      .HasOne(rp => rp.Restaurant)
+      .WithMany(r => r.Photos)
+      .HasForeignKey(rp => rp.RestaurantId)
+      .OnDelete(DeleteBehavior.Cascade);
   }
 
   private static void ConfigureRestaurant(ModelBuilder modelBuilder)
@@ -64,7 +75,7 @@ public class DataContext : DbContext
       .HasOne(r => r.User)
       .WithMany(u => u.RestaurantsOwned)
       .HasForeignKey(r => r.UserId)
-      .OnDelete(DeleteBehavior.Restrict);
+      .OnDelete(DeleteBehavior.Cascade);
   }
 
   private static void ConfigureSchedule(ModelBuilder modelBuilder)
@@ -87,9 +98,26 @@ public class DataContext : DbContext
       entity.HasOne(rc => rc.Cuisine)
         .WithMany()
         .HasForeignKey(rc => rc.CuisineId)
-        .OnDelete(DeleteBehavior.Restrict);
+        .OnDelete(DeleteBehavior.Cascade);
     });
   }
+
+  private static void ConfigureRestaurantDressCodes(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<RestaurantDressCode>(entity =>
+    {
+      entity.HasOne(rc => rc.Restaurant)
+        .WithMany(r => r.DressCodes)
+        .HasForeignKey(rc => rc.RestaurantId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      entity.HasOne(rc => rc.DressCode)
+        .WithMany()
+        .HasForeignKey(rc => rc.DressCodeId)
+        .OnDelete(DeleteBehavior.Cascade);
+    });
+  }
+
 
   private static void ConfigureRestaurantModerator(ModelBuilder modelBuilder)
   {
@@ -98,7 +126,7 @@ public class DataContext : DbContext
       entity.HasOne(rm => rm.User)
         .WithMany()
         .HasForeignKey(rm => rm.UserId)
-        .OnDelete(DeleteBehavior.Restrict);
+        .OnDelete(DeleteBehavior.Cascade);
 
       entity.HasOne(rm => rm.Restaurant)
         .WithMany(r => r.Moderators)
@@ -119,23 +147,7 @@ public class DataContext : DbContext
       entity.HasOne(rt => rt.Tag)
         .WithMany()
         .HasForeignKey(rt => rt.TagId)
-        .OnDelete(DeleteBehavior.Restrict);
-    });
-  }
-
-  private static void ConfigureDishTag(ModelBuilder modelBuilder)
-  {
-    modelBuilder.Entity<DishTag>(entity =>
-    {
-      entity.HasOne(rt => rt.Dish)
-        .WithMany(r => r.Tags)
-        .HasForeignKey(rt => rt.DishId)
         .OnDelete(DeleteBehavior.Cascade);
-
-      entity.HasOne(rt => rt.Tag)
-        .WithMany()
-        .HasForeignKey(rt => rt.TagId)
-        .OnDelete(DeleteBehavior.Restrict);
     });
   }
 
