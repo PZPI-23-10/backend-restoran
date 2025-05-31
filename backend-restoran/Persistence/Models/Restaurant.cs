@@ -26,7 +26,7 @@ public class Restaurant : BaseEntity
   public List<RestaurantCuisine> Cuisines { get; set; } = [];
   public List<RestaurantDressCode> DressCodes { get; set; } = [];
   public List<RestaurantPhoto> Photos { get; set; } = [];
-
+  public List<Review> Reviews { get; set; } = [];
   [ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
   public User User;

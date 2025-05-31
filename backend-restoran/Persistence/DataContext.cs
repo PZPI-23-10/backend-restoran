@@ -20,6 +20,8 @@ public class DataContext : DbContext
   public DbSet<Schedule> Schedules { get; set; }
   public DbSet<FavouriteDish> FavouriteDishes { get; set; }
   public DbSet<FavouriteRestaurant> FavouriteRestaurants { get; set; }
+  public DbSet<RestaurantPhoto> RestaurantPhotos { get; set; }
+  public DbSet<Review> Reviews { get; set; }
 
   public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
   {
@@ -58,6 +60,22 @@ public class DataContext : DbContext
     ConfigureRestaurantPhotos(modelBuilder);
     ConfigureRestaurantModerator(modelBuilder);
     ConfigureRestaurantTag(modelBuilder);
+    ConfigureReviews(modelBuilder);
+  }
+
+  private void ConfigureReviews(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Review>()
+      .HasOne(r => r.Restaurant)
+      .WithMany(r => r.Reviews)
+      .HasForeignKey(r => r.RestaurantId)
+      .OnDelete(DeleteBehavior.Cascade);
+
+    modelBuilder.Entity<Review>()
+      .HasOne(r => r.User)
+      .WithMany(u => u.Reviews)
+      .HasForeignKey(r => r.UserId)
+      .OnDelete(DeleteBehavior.Cascade);
   }
 
   private static void ConfigureRestaurantPhotos(ModelBuilder modelBuilder)

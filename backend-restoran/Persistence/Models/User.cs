@@ -12,4 +12,5 @@ public class User : BaseEntity
   public List<FavouriteDish> FavoriteDishes { get; set; } = [];
   public List<FavouriteRestaurant> FavoriteRestaurants { get; set; } = [];
   public List<Restaurant> RestaurantsOwned { get; set; } = [];
+  public List<Review> Reviews { get; set; } = [];
 }
