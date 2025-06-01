@@ -33,6 +33,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Moderators).ThenInclude(rm => rm.User)
       .Include(r => r.Dishes)
       .Include(r => r.Schedule)
+      .Include(r => r.Reviews)
       .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
     if (restaurant == null)
@@ -51,6 +52,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Moderators).ThenInclude(rm => rm.User)
       .Include(r => r.Dishes)
       .Include(r => r.Schedule)
+      .Include(r => r.Reviews)
       .ToListAsync();
 
     return Ok(restaurants);
@@ -116,7 +118,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       });
     }
 
-    restaurant.Photos = photos;
+    if (photos.Count != 0)
+      restaurant.Photos = photos;
   }
 
   private async Task AddRestaurantDressCodes(CreateRestaurantRequest request, Restaurant restaurant)
@@ -124,7 +127,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     var dressCodes = new List<RestaurantDressCode>();
     foreach (var tagName in request.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
     {
-      var dressCode = await dataContext.Tags
+      var dressCode = await dataContext.DressCodes
         .FirstOrDefaultAsync(t => t.Name == tagName);
 
       if (dressCode == null)
@@ -137,7 +140,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       });
     }
 
-    restaurant.DressCodes = dressCodes;
+    if (dressCodes.Count != 0)
+      restaurant.DressCodes = dressCodes;
   }
 
   private static void AddSchedule(CreateRestaurantRequest request, Restaurant restaurant)
@@ -173,7 +177,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       dishes.Add(dish);
     }
 
-    restaurant.Dishes = dishes;
+    if (dishes.Count != 0)
+      restaurant.Dishes = dishes;
   }
 
   private async Task AddRestaurantModerators(CreateRestaurantRequest request, Restaurant restaurant)
@@ -194,7 +199,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       });
     }
 
-    restaurant.Moderators = moderators;
+    if (moderators.Count != 0)
+      restaurant.Moderators = moderators;
   }
 
   private async Task AddRestaurantTags(CreateRestaurantRequest request, Restaurant restaurant)
@@ -215,7 +221,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       });
     }
 
-    restaurant.Tags = tags;
+    if (tags.Count != 0)
+      restaurant.Tags = tags;
   }
 
   private async Task AddRestaurantCuisines(CreateRestaurantRequest request, Restaurant restaurant)
@@ -236,7 +243,8 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       });
     }
 
-    restaurant.Cuisines = cuisines;
+    if (cuisines.Count != 0)
+      restaurant.Cuisines = cuisines;
   }
 
   [HttpDelete]
