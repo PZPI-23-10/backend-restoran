@@ -127,7 +127,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
   private async Task AddRestaurantDressCodes(CreateRestaurantRequest request, Restaurant restaurant)
   {
     var dressCodes = new List<RestaurantDressCode>();
-    foreach (var tagName in request.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
+    foreach (var tagName in request.DressCode.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
     {
       var dressCode = await dataContext.DressCodes
         .FirstOrDefaultAsync(t => t.Name == tagName);
