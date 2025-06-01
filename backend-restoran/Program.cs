@@ -70,6 +70,51 @@ public static class Program
       });
     });
 
+    builder.Services.AddSwaggerGen(c =>
+    {
+      c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+    
+      c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
+      {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+          AuthorizationCode = new OpenApiOAuthFlow
+          {
+            AuthorizationUrl = new Uri("https://accounts.google.com/o/oauth2/auth"),
+            TokenUrl = new Uri("https://oauth2.googleapis.com/token"),
+            Scopes = new Dictionary<string, string>
+            {
+              { "openid", "OpenID" },
+              { "email", "Email" },
+              { "profile", "Profile" }
+            }
+          }
+        }
+      });
+
+      c.AddSecurityRequirement(new OpenApiSecurityRequirement
+      {
+        {
+          new OpenApiSecurityScheme
+          {
+            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "OAuth2" }
+          },
+          new[] { "openid", "email", "profile" }
+        }
+      });
+    });
+    
+    builder.Services.AddCors(options =>
+    {
+      options.AddPolicy("AllowSwagger", policy =>
+      {
+        policy.WithOrigins("http://localhost:5291")
+          .AllowAnyHeader()
+          .AllowAnyMethod();
+      });
+    });
+    
     builder.Services.ConfigureDatabase(builder.Configuration);
     builder.Services.AddSingleton<TokenService>();
     builder.Services.AddAuthorization();
@@ -88,7 +133,8 @@ public static class Program
     }
 
     app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-
+    
+    app.UseCors("AllowSwagger");
     app.UseAuthorization();
     app.UseAuthentication();
     app.UseErrorHandler();
