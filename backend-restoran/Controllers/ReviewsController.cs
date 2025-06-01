@@ -42,12 +42,21 @@ public class ReviewsController(DataContext dataContext) : ControllerBase
   {
     var reviews = await dataContext.Reviews
       .Where(r => r.UserId == Guid.Parse(userId))
+      .Include(review => review.User)
       .ToListAsync();
 
     if (reviews.Count == 0)
       return NotFound("No reviews found for the specified user.");
 
-    return Ok(reviews);
+    return Ok(reviews.Select(x => new
+    {
+      x.Id,
+      x.Rating,
+      x.Comment,
+      x.User.Email,
+      x.DateCreated,
+      x.DateUpdated
+    }));
   }
 
   [HttpGet]
@@ -56,11 +65,20 @@ public class ReviewsController(DataContext dataContext) : ControllerBase
   {
     var reviews = await dataContext.Reviews
       .Where(r => r.RestaurantId == Guid.Parse(restaurantId))
+      .Include(x => x.User)
       .ToListAsync();
 
     if (reviews.Count == 0)
       return NotFound("No reviews found for the specified restaurant.");
 
-    return Ok(reviews);
+    return Ok(reviews.Select(x => new
+    {
+      x.Id,
+      x.Rating,
+      x.Comment,
+      x.User.Email,
+      x.DateCreated,
+      x.DateUpdated
+    }));
   }
 }
