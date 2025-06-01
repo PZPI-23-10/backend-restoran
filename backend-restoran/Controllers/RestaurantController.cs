@@ -84,6 +84,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Region = request.Region,
       Street = request.Street,
       Description = request.Description,
+      PhotoUrl = request.PhotoUrl,
       Email = request.Email,
       Organization = request.Organization,
       Latitude = request.Latitude,
@@ -325,6 +326,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
     restaurant.Name = request.Name;
     restaurant.City = request.City;
+    restaurant.PhotoUrl = request.PhotoUrl;
     restaurant.Region = request.Region;
     restaurant.Street = request.Street;
     restaurant.Description = request.Description;

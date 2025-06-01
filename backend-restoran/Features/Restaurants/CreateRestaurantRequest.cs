@@ -6,6 +6,7 @@ public record CreateRestaurantRequest(
   string Region,
   string Street,
   string Description,
+  string PhotoUrl,
   decimal Latitude,
   decimal Longitude,
   bool HasParking,

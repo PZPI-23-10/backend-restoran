@@ -12,6 +12,7 @@ public class Restaurant : BaseEntity
   public string Email { get; set; }
   public string Layout { get; set; }
   public string Organization { get; set; }
+  public string PhotoUrl { get; set; }
 
   public decimal Latitude { get; set; }
   public decimal Longitude { get; set; }

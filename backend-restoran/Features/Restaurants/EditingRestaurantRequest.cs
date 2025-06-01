@@ -20,8 +20,8 @@ public record EditingRestaurantRequest(
     List<string> Gallery,
     List<EditDishDto> Dishes,
     List<EditLayoutItem> Layout,
-    List<EditScheduleItemDto> Schedule
-);
+    List<EditScheduleItemDto> Schedule,
+    string PhotoUrl = "");
 
 public record EditDishDto(
     string PhotoUrl,
