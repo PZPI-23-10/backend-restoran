@@ -107,13 +107,13 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
 
     return Ok(new LoginUserResponse(user.Id.ToString(), accessToken.TokenKey));
   }
-  
+
   [HttpPost]
   [Route("EditUser")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> EditUser([FromBody] EditUserRequest request)
   {
-   var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
     if (string.IsNullOrEmpty(userId))
       return Unauthorized("User ID not found in token.");
@@ -122,15 +122,49 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
 
     if (user == null)
       return NotFound("User not found.");
-    
+
     user.Email = request.Email;
     user.City = request.City;
     user.Street = request.Street;
     user.FirstName = request.FirstName;
     user.MiddleName = request.MiddleName;
     user.LastName = request.LastName;
-    
+
     await dataContext.SaveChangesAsync();
     return Ok();
+  }
+
+  [HttpGet]
+  [Route("ManageableRestaurants")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> GetManageableRestaurants()
+  {
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return Unauthorized("User ID not found in token.");
+
+    var userGuid = Guid.Parse(userId);
+    var user = await dataContext.Users
+      .Include(x => x.RestaurantsOwned)
+      .Include(x => x.RestaurantsModerating)
+      .ThenInclude(x => x.Restaurant)
+      .FirstOrDefaultAsync(x => x.Id == userGuid);
+
+    if (user == null)
+      return NotFound("User not found.");
+
+    if (user.RestaurantsOwned.Count == 0 && user.RestaurantsModerating.Count == 0)
+      return NotFound("No manageable restaurants found for this user.");
+
+    var ownedRestaurants = user.RestaurantsOwned;
+    var moderatedRestaurants = user.RestaurantsModerating;
+
+    return Ok(new
+    {
+      UserId = user.Id,
+      OwnedRestasurants = ownedRestaurants,
+      ModeratedRestaurants = moderatedRestaurants
+    });
   }
 }
