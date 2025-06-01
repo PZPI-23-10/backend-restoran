@@ -28,8 +28,7 @@ public record EditDishDto(
     string Name,
     string Ingredients,
     int Price,
-    int Weight,
-    List<string> Tags
+    int Weight
 );
 
 public record EditLayoutItem(
