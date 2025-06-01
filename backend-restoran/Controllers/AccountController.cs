@@ -16,7 +16,8 @@ namespace backend_restoran.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AccountController(DataContext dataContext, TokenService tokenService) : ControllerBase
+public class AccountController(DataContext dataContext, TokenService tokenService, IConfiguration configuration)
+  : ControllerBase
 {
   [HttpPost]
   [Route("GetUser")]
@@ -98,6 +99,9 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
     if (user == null)
       return Unauthorized("User with this email does not exist.");
 
+    if (user.IsGoogleAuth)
+      return BadRequest("This user is registered with Google authentication. Please use Google login.");
+
     var inputBytes = Encoding.UTF8.GetBytes(request.Password);
     var hashBytes = MD5.HashData(inputBytes);
     var hashedPassword = Convert.ToBase64String(hashBytes);
@@ -169,57 +173,34 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
       ModeratedRestaurants = moderatedRestaurants
     });
   }
-  
-  
-  [HttpPost]
-  [Route("LoginWithGoogle")]
-  public async Task<IActionResult> LoginWithGoogle([FromBody] LoginWithGoogleRequest request)
+
+  [HttpPost("google")]
+  public async Task<IActionResult> GoogleLogin([FromBody] LoginWithGoogleRequest request)
   {
-    if (string.IsNullOrEmpty(request.GoogleToken))
-      return BadRequest("Google token is required.");
+    var payload = await GoogleJsonWebSignature.ValidateAsync(request.GoogleToken,
+      new GoogleJsonWebSignature.ValidationSettings
+      {
+        Audience = [configuration.GetSection("Google")["ClientId"]]
+      });
 
-    // Валидация Google токена
-    var payload = await ValidateGoogleToken(request.GoogleToken);
-    if (payload == null)
-      return Unauthorized("Invalid Google token.");
+    var user = await dataContext.Users.FirstOrDefaultAsync(u => u.Email == payload.Email);
 
-    // Поиск или создание пользователя
-    var user = dataContext.Users.FirstOrDefault(u => u.Email == payload.Email);
     if (user == null)
     {
       user = new User
       {
         Email = payload.Email,
-        FirstName = payload.Name,
-        Password = "google_auth", 
+        FirstName = payload.GivenName,
+        LastName = payload.FamilyName,
         IsGoogleAuth = true
       };
-        
+
       dataContext.Users.Add(user);
       await dataContext.SaveChangesAsync();
     }
 
-    // Генерация access token (используем тот же механизм, что и для обычного входа)
-    var accessToken = tokenService.GenerateAccessToken(user.Id.ToString(), user.Email, request.RememberMe);
+    var jwt = tokenService.GenerateAccessToken(user.Id.ToString(), user.Email, request.RememberMe);
 
-    return Ok(new LoginUserResponse(user.Id.ToString(), accessToken.TokenKey));
-  }
-
-  private async Task<GoogleJsonWebSignature.Payload> ValidateGoogleToken(string token)
-  {
-    try
-    {
-      var validationSettings = new GoogleJsonWebSignature.ValidationSettings
-      {
-        // Укажите ваш Google Client ID
-        Audience = new[] { "your-google-client-id.apps.googleusercontent.com" }
-      };
-        
-      return await GoogleJsonWebSignature.ValidateAsync(token, validationSettings);
-    }
-    catch
-    {
-      return null;
-    }
+    return Ok(new LoginUserResponse(user.Id.ToString(), jwt.TokenKey));
   }
 }
