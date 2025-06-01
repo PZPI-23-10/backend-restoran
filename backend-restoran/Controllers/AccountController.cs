@@ -19,7 +19,6 @@ namespace backend_restoran.Controllers;
 public class AccountController(DataContext dataContext, TokenService tokenService) : ControllerBase
 {
   [HttpPost]
-  [Route("GetUser")]
   public async Task<IActionResult> GetUser([FromBody] GetUserRequest request)
   {
     var id = request.UserId;
