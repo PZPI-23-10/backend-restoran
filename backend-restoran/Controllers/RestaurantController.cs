@@ -35,6 +35,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
+      .Include( r => r.DressCodes)
       .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
     if (restaurant == null)
@@ -55,6 +56,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
+      .Include( r => r.DressCodes)
       .ToListAsync();
 
     return Ok(restaurants);
@@ -295,16 +297,29 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     if (user == null)
       return NotFound("User not found.");
 
-    var restaurant = await dataContext.Restaurants.FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
+    var restaurant = await dataContext.Restaurants
+      .Include(r => r.User)
+      .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
+      .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
+      .Include(r => r.Moderators).ThenInclude(rm => rm.User)
+      .Include(r => r.Dishes)
+      .Include(r => r.Schedule)
+      .Include(r => r.Reviews)
+      .Include(r => r.Photos)
+      .Include( r => r.DressCodes)
+      .FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
 
     if (restaurant == null)
     {
       return NotFound("Restaurant not found.");
     }
 
-    if (restaurant.UserId != Guid.Parse(userId))
+    bool isOwner = restaurant.UserId == Guid.Parse(userId);
+    bool isModerator = restaurant.Moderators.Any(m => m.UserId == Guid.Parse(userId));
+      
+    if (!isOwner && !isModerator)
     {
-      return BadRequest("User does not have permission to delete restaurant.");
+      return BadRequest("User does not have permission to edit restaurant.");
     }
 
 
@@ -318,15 +333,58 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     restaurant.Latitude = request.Latitude;
     restaurant.Longitude = request.Longitude;
     restaurant.Layout = request.Layout.ToJson();
+    restaurant.HasParking = request.HasParking;
+    restaurant.Accessible = request.Accessible;
 
     await EditingRestaurantCuisines(request, restaurant);
     await EditingRestaurantTags(request, restaurant);
     await UpdateRestaurantModerators(request, restaurant);
     await UpdateDishes(request, restaurant);
     UpdateSchedule(request, restaurant);
+    await UpdateRestaurantPhotos(request, restaurant);
+    await UpdateRestaurantDressCodes(request, restaurant);
 
     await dataContext.SaveChangesAsync();
     return Ok();
+  }
+
+  private async Task UpdateRestaurantPhotos(EditingRestaurantRequest request, Restaurant restaurant)
+  {
+    dataContext.RestaurantPhotos.RemoveRange(restaurant.Photos);
+ 
+    var photos = new List<RestaurantPhoto>();
+    foreach (var photoUrl in request.Gallery.Where(url => !string.IsNullOrWhiteSpace(url)))
+    {
+      photos.Add(new RestaurantPhoto
+      {
+        RestaurantId = restaurant.Id,
+        Url = photoUrl
+      });
+    }
+    
+    restaurant.Photos = photos;
+  }
+
+  private async Task UpdateRestaurantDressCodes(EditingRestaurantRequest request, Restaurant restaurant)
+  {
+    dataContext.RestaurantDressCodes.RemoveRange(restaurant.DressCodes);
+
+    var dressCodes = new List<RestaurantDressCode>();
+    foreach (var dressCodeName in request.DressCode.Where(dc => !string.IsNullOrWhiteSpace(dc)))
+    {
+      var dressCode = await dataContext.DressCodes
+        .FirstOrDefaultAsync(dc => dc.Name == dressCodeName);
+
+      if (dressCode == null) continue;
+
+      dressCodes.Add(new RestaurantDressCode
+      {
+        RestaurantId = restaurant.Id,
+        DressCodeId = dressCode.Id
+      });
+    }
+
+    restaurant.DressCodes = dressCodes;
   }
 
   private async Task EditingRestaurantCuisines(EditingRestaurantRequest request, Restaurant restaurant)
@@ -440,4 +498,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
     restaurant.Schedule = schedules;
   }
+  
+  
+  
 }

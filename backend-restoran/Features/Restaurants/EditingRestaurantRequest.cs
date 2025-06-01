@@ -11,9 +11,13 @@ public record EditingRestaurantRequest(
     string Organization,
     decimal Latitude,
     decimal Longitude,
+    bool HasParking,
+    bool Accessible,
     List<string> Cuisine,
     List<string> Tags,
     List<string> ModeratorEmails,
+    List<string> DressCode,
+    List<string> Gallery,
     List<EditDishDto> Dishes,
     List<EditLayoutItem> Layout,
     List<EditScheduleItemDto> Schedule
