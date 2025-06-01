@@ -20,7 +20,6 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
   : ControllerBase
 {
   [HttpPost]
-  [Route("GetUser")]
   public async Task<IActionResult> GetUser([FromBody] GetUserRequest request)
   {
     var id = request.UserId;
