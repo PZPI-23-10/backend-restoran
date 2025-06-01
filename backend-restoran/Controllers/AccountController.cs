@@ -1,10 +1,13 @@
-﻿using System.Security.Cryptography;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using backend_restoran.Features.Users;
 using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
 using backend_restoran.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,6 +32,7 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
       .Include(u => u.RestaurantsOwned)
       .Include(u => u.FavoriteRestaurants)
       .Include(u => u.FavoriteDishes)
+      .Include(u => u.RestaurantsModerating)
       .FirstOrDefaultAsync(u => u.Id == userId);
 
     if (user == null)
@@ -102,5 +106,31 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
     var accessToken = tokenService.GenerateAccessToken(user.Id.ToString(), user.Email, request.RememberMe);
 
     return Ok(new LoginUserResponse(user.Id.ToString(), accessToken.TokenKey));
+  }
+  
+  [HttpPost]
+  [Route("EditUser")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> EditUser([FromBody] EditUserRequest request)
+  {
+   var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return Unauthorized("User ID not found in token.");
+
+    var user = await dataContext.Users.FirstOrDefaultAsync(x => x.Id == Guid.Parse(userId));
+
+    if (user == null)
+      return NotFound("User not found.");
+    
+    user.Email = request.Email;
+    user.City = request.City;
+    user.Street = request.Street;
+    user.FirstName = request.FirstName;
+    user.MiddleName = request.MiddleName;
+    user.LastName = request.LastName;
+    
+    await dataContext.SaveChangesAsync();
+    return Ok();
   }
 }
