@@ -173,22 +173,39 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
     });
   }
 
-  [HttpPost("google")]
-  public async Task<IActionResult> GoogleLogin([FromBody] LoginWithGoogleRequest request)
+  [HttpPost("android/google")]
+  public async Task<IActionResult> GoogleAndroidLogin([FromBody] LoginWithGoogleRequest request)
   {
     var payload = await GoogleJsonWebSignature.ValidateAsync(request.GoogleToken,
       new GoogleJsonWebSignature.ValidationSettings
       {
-        Audience = [configuration.GetSection("Google")["ClientId"]]
+        Audience = [configuration.GetSection("Google")["AndroidClientId"]]
       });
 
+    return await GoogleLogin(request, payload);
+  }
+
+  [HttpPost("web/google")]
+  public async Task<IActionResult> GoogleWebLogin([FromBody] LoginWithGoogleRequest request)
+  {
+    var payload = await GoogleJsonWebSignature.ValidateAsync(request.GoogleToken,
+      new GoogleJsonWebSignature.ValidationSettings
+      {
+        Audience = [configuration.GetSection("Google")["WebClientId"]]
+      });
+
+    return await GoogleLogin(request, payload);
+  }
+
+  private async Task<IActionResult> GoogleLogin(LoginWithGoogleRequest request, GoogleJsonWebSignature.Payload payload)
+  {
     var user = await dataContext.Users.FirstOrDefaultAsync(u => u.Email == payload.Email);
 
     if (user == null)
     {
       user = new User
       {
-        Email = payload.Email,  
+        Email = payload.Email,
         FirstName = payload.GivenName,
         LastName = payload.FamilyName,
         MiddleName = string.Empty,
