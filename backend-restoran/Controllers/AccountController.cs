@@ -188,9 +188,13 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
     {
       user = new User
       {
-        Email = payload.Email,
+        Email = payload.Email,  
         FirstName = payload.GivenName,
         LastName = payload.FamilyName,
+        MiddleName = string.Empty,
+        City = string.Empty,
+        Street = string.Empty,
+        Password = string.Empty,
         IsGoogleAuth = true
       };
 
