@@ -34,6 +34,16 @@ public class FavoriteController(DataContext dataContext) : ControllerBase
     if (dish == null)
       return NotFound("Dish not found.");
 
+    var existingFavourite = await dataContext.FavouriteDishes
+      .FirstOrDefaultAsync(x => x.UserId == user.Id && x.DishId == dish.Id);
+
+    if (existingFavourite != null)
+    {
+      dataContext.FavouriteDishes.Remove(existingFavourite);
+      await dataContext.SaveChangesAsync();
+      return Ok("Dish deleted from favorites.");
+    }
+
     user.FavoriteDishes.Add(new FavouriteDish
     {
       Dish = dish,
@@ -42,7 +52,7 @@ public class FavoriteController(DataContext dataContext) : ControllerBase
 
     await dataContext.SaveChangesAsync();
 
-    return Ok();
+    return Ok("Dish added to favorites.");
   }
 
 
@@ -67,6 +77,17 @@ public class FavoriteController(DataContext dataContext) : ControllerBase
     if (restaurant == null)
       return NotFound("Restaurant not found.");
 
+    var existingFavourite =
+      await dataContext.FavouriteRestaurants.FirstOrDefaultAsync(x =>
+        x.UserId == user.Id && x.RestaurantId == restaurant.Id);
+
+    if (existingFavourite != null)
+    {
+      dataContext.FavouriteRestaurants.Remove(existingFavourite);
+      await dataContext.SaveChangesAsync();
+      return Ok("Restaurant deleted from favorites.");
+    }
+
     user.FavoriteRestaurants.Add(new FavouriteRestaurant
     {
       Restaurant = restaurant,
@@ -75,7 +96,7 @@ public class FavoriteController(DataContext dataContext) : ControllerBase
 
     await dataContext.SaveChangesAsync();
 
-    return Ok();
+    return Ok("Restaurant added to favorites.");
   }
 
   [HttpGet]
