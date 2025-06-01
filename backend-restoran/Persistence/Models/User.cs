@@ -10,9 +10,9 @@ public class User : BaseEntity
   public string City { get; set; }
   public string Street { get; set; }
   public bool IsGoogleAuth { get; set; } = false;
-  public List<FavouriteDish> FavoriteDishes = [];
-  public List<FavouriteRestaurant> FavoriteRestaurants = [];
-  public List<Restaurant> RestaurantsOwned = [];
-  public List<RestaurantModerator> RestaurantsModerating = [];
-  public List<Review> Reviews = [];
+  public List<FavouriteDish> FavoriteDishes { get; set; } = [];
+  public List<FavouriteRestaurant> FavoriteRestaurants { get; set; } = [];
+  public List<Restaurant> RestaurantsOwned { get; set; } = [];
+  public List<RestaurantModerator> RestaurantsModerating { get; set; } = [];
+  public List<Review> Reviews { get; set; } = [];
 }
