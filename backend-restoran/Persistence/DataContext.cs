@@ -142,7 +142,7 @@ public class DataContext : DbContext
     modelBuilder.Entity<RestaurantModerator>(entity =>
     {
       entity.HasOne(rm => rm.User)
-        .WithMany()
+        .WithMany(x => x.RestaurantsModerating)
         .HasForeignKey(rm => rm.UserId)
         .OnDelete(DeleteBehavior.Cascade);
 
