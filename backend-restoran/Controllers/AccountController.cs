@@ -6,6 +6,7 @@ using backend_restoran.Features.Users;
 using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
 using backend_restoran.Services;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -166,5 +167,58 @@ public class AccountController(DataContext dataContext, TokenService tokenServic
       OwnedRestasurants = ownedRestaurants,
       ModeratedRestaurants = moderatedRestaurants
     });
+  }
+  
+  
+  [HttpPost]
+  [Route("LoginWithGoogle")]
+  public async Task<IActionResult> LoginWithGoogle([FromBody] LoginWithGoogleRequest request)
+  {
+    if (string.IsNullOrEmpty(request.GoogleToken))
+      return BadRequest("Google token is required.");
+
+    // Валидация Google токена
+    var payload = await ValidateGoogleToken(request.GoogleToken);
+    if (payload == null)
+      return Unauthorized("Invalid Google token.");
+
+    // Поиск или создание пользователя
+    var user = dataContext.Users.FirstOrDefault(u => u.Email == payload.Email);
+    if (user == null)
+    {
+      user = new User
+      {
+        Email = payload.Email,
+        FirstName = payload.Name,
+        Password = "google_auth", 
+        IsGoogleAuth = true
+      };
+        
+      dataContext.Users.Add(user);
+      await dataContext.SaveChangesAsync();
+    }
+
+    // Генерация access token (используем тот же механизм, что и для обычного входа)
+    var accessToken = tokenService.GenerateAccessToken(user.Id.ToString(), user.Email, request.RememberMe);
+
+    return Ok(new LoginUserResponse(user.Id.ToString(), accessToken.TokenKey));
+  }
+
+  private async Task<GoogleJsonWebSignature.Payload> ValidateGoogleToken(string token)
+  {
+    try
+    {
+      var validationSettings = new GoogleJsonWebSignature.ValidationSettings
+      {
+        // Укажите ваш Google Client ID
+        Audience = new[] { "your-google-client-id.apps.googleusercontent.com" }
+      };
+        
+      return await GoogleJsonWebSignature.ValidateAsync(token, validationSettings);
+    }
+    catch
+    {
+      return null;
+    }
   }
 }

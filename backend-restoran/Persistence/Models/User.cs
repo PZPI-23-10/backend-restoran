@@ -9,6 +9,7 @@ public class User : BaseEntity
   public string Password { get; set; }
   public string City { get; set; }
   public string Street { get; set; }
+  public bool IsGoogleAuth { get; set; } = false;
   public List<FavouriteDish> FavoriteDishes = [];
   public List<FavouriteRestaurant> FavoriteRestaurants = [];
   public List<Restaurant> RestaurantsOwned = [];

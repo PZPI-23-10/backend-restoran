@@ -73,7 +73,8 @@ public static class Program
     builder.Services.ConfigureDatabase(builder.Configuration);
     builder.Services.AddSingleton<TokenService>();
     builder.Services.AddAuthorization();
-
+    builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+    
     var app = builder.Build();
 
     var serviceScope = app.Services.CreateScope();
