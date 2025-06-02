@@ -48,7 +48,7 @@ public class TokenService
   {
     var tokenHandler = new JwtSecurityTokenHandler();
     var key = Encoding.UTF8.GetBytes(_accessSecretKey);
-
+    
     try
     {
       var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters

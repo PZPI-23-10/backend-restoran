@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using backend_restoran.Chat;
+using backend_restoran.Controllers;
 using backend_restoran.Extensions;
 using backend_restoran.Persistence;
 using backend_restoran.Services;
@@ -73,7 +75,7 @@ public static class Program
     builder.Services.AddSwaggerGen(c =>
     {
       c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
-    
+
       c.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
       {
         Type = SecuritySchemeType.OAuth2,
@@ -104,7 +106,7 @@ public static class Program
         }
       });
     });
-    
+
     builder.Services.AddCors(options =>
     {
       options.AddPolicy("AllowSwagger", policy =>
@@ -114,12 +116,14 @@ public static class Program
           .AllowAnyMethod();
       });
     });
-    
+
     builder.Services.ConfigureDatabase(builder.Configuration);
     builder.Services.AddSingleton<TokenService>();
     builder.Services.AddAuthorization();
+    builder.Services.AddSignalR();
     builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
-    
+    builder.Services.AddSingleton<ChatSessionStore>();
+
     var app = builder.Build();
 
     var serviceScope = app.Services.CreateScope();
@@ -133,12 +137,14 @@ public static class Program
     }
 
     app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-    
+
     app.UseCors("AllowSwagger");
     app.UseAuthorization();
     app.UseAuthentication();
     app.UseErrorHandler();
     app.MapControllers();
+
+    app.MapHub<ChatHub>("/hubs/chat");
 
     app.Run();
   }
