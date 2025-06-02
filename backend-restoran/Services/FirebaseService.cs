@@ -8,11 +8,11 @@ public class FirebaseService
 {
   public FirebaseService()
   {
-    var path = Path.Combine(AppContext.BaseDirectory, "restaurant-app-19cb8-5ecea50a869a.json");
+    var firebaseJson = Environment.GetEnvironmentVariable("firebaseKey");
 
     FirebaseApp.Create(new AppOptions
     {
-      Credential = GoogleCredential.FromFile(path),
+      Credential = GoogleCredential.FromJson(firebaseJson),
     });
   }
 
