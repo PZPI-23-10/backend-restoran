@@ -6,7 +6,7 @@ public class Reservation : BaseEntity
 {
   public int PeopleCount { get; set; }
   public DateTime StartDate { get; set; }
-  public DateTime EndDate { get; set; }
+  public DateTime? EndDate { get; set; }
   [ForeignKey(nameof(Table))] public Guid TableId { get; set; }
 
   public Table Table;
