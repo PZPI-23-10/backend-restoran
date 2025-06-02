@@ -80,7 +80,6 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Dishes)
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
-      .Include(r => r.Photos)
       .Include(r => r.DressCodes).ThenInclude(x => x.DressCode)
       .Skip((page - 1) * pageSize)
       .Take(pageSize)
