@@ -115,6 +115,12 @@ public static class Program
           .AllowAnyHeader()
           .AllowAnyMethod();
       });
+      
+      var allowedOrigins = new[] {
+        "http://localhost:56082",
+        "https://your-production-client.com"
+      };
+      
     });
 
     builder.Services.ConfigureDatabase(builder.Configuration);
