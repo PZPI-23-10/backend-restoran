@@ -35,7 +35,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
-      .Include( r => r.DressCodes)
+      .Include( r => r.DressCodes).ThenInclude(rd => rd.DressCode)
       .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
     if (restaurant == null)
@@ -56,7 +56,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
-      .Include( r => r.DressCodes)
+      .Include( r => r.DressCodes).ThenInclude(x => x.DressCode)
       .ToListAsync();
 
     return Ok(restaurants);
