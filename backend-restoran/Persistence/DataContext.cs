@@ -22,6 +22,8 @@ public class DataContext : DbContext
   public DbSet<FavouriteRestaurant> FavouriteRestaurants { get; set; }
   public DbSet<RestaurantPhoto> RestaurantPhotos { get; set; }
   public DbSet<Review> Reviews { get; set; }
+  public DbSet<Table>  Tables { get; set; }
+  public DbSet<Reservation>  Reservations { get; set; }
 
   public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
   {
@@ -63,6 +65,30 @@ public class DataContext : DbContext
     ConfigureReviews(modelBuilder);
   }
 
+  private void ConfigureTables(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Table>()
+      .HasOne(r => r.Restaurant)
+      .WithMany(r => r.Tables)
+      .HasForeignKey(r => r.RestaurantId)
+      .OnDelete(DeleteBehavior.Cascade);
+  }
+  
+  private void ConfigureOrders(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Reservation>()
+      .HasOne(r => r.Table)
+      .WithMany(r => r.Orders)
+      .HasForeignKey(r => r.TableId)
+      .OnDelete(DeleteBehavior.Cascade);
+    
+    modelBuilder.Entity<Reservation>()
+      .HasOne(r => r.User)
+      .WithMany(r => r.Orders)
+      .HasForeignKey(r => r.UserId)
+      .OnDelete(DeleteBehavior.Cascade);
+  }
+  
   private void ConfigureReviews(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<Review>()

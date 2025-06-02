@@ -15,4 +15,5 @@ public class User : BaseEntity
   public List<Restaurant> RestaurantsOwned { get; set; } = [];
   public List<RestaurantModerator> RestaurantsModerating { get; set; } = [];
   public List<Review> Reviews { get; set; } = [];
+  public List<Reservation> Orders { get; set; } = [];
 }

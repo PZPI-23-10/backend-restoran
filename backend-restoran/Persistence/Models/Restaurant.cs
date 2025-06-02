@@ -13,10 +13,8 @@ public class Restaurant : BaseEntity
   public string Layout { get; set; }
   public string Organization { get; set; }
   public string PhotoUrl { get; set; }
-
   public decimal Latitude { get; set; }
   public decimal Longitude { get; set; }
-
   public bool HasParking { get; set; }
   public bool Accessible { get; set; }
   public List<RestaurantModerator> Moderators { get; set; } = [];
@@ -27,6 +25,7 @@ public class Restaurant : BaseEntity
   public List<RestaurantDressCode> DressCodes { get; set; } = [];
   public List<RestaurantPhoto> Photos { get; set; } = [];
   public List<Review> Reviews { get; set; } = [];
+  public List<Table> Tables { get; set; } = [];
   [ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
   public User User;
