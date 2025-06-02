@@ -14,7 +14,7 @@ namespace backend_restoran.Controllers;
 [Route("api/[controller]")]
 public class RestaurantController(DataContext dataContext) : ControllerBase
 {
-  [HttpGet]
+  [HttpPost]
   [Route("moderators/random")]
   public async Task<IActionResult> GetRandomModerator([FromBody] Guid restaurantId)
   {
