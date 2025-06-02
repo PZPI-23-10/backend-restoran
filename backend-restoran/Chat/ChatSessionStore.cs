@@ -10,8 +10,8 @@ public class ChatSessionStore
 
   public ChatSessionStore()
   {
-    _cleanupTimer = new Timer(_ => CleanupInactiveSessions(), null, 
-      TimeSpan.FromMinutes(30), 
+    _cleanupTimer = new Timer(_ => CleanupInactiveSessions(), null,
+      TimeSpan.FromMinutes(30),
       TimeSpan.FromMinutes(30));
   }
 
@@ -23,7 +23,7 @@ public class ChatSessionStore
       UserId = userId,
       ModeratorId = moderatorId
     };
-        
+
     _sessions.TryAdd(session.SessionId, session);
     return session;
   }
@@ -46,10 +46,24 @@ public class ChatSessionStore
   {
     var cutoff = DateTime.UtcNow.AddHours(-2);
     var inactive = _sessions.Where(s => s.Value.LastActivity < cutoff).ToList();
-        
+
     foreach (var session in inactive)
     {
       _sessions.TryRemove(session.Key, out _);
     }
+  }
+
+  public List<ActiveChatSession> GetSessionsByUser(string userId)
+  {
+    return _sessions.Values
+      .Where(s => s.UserId.ToString() == userId)
+      .ToList();
+  }
+
+  public List<ActiveChatSession> GetSessionsByModerator(string userId)
+  {
+    return _sessions.Values
+      .Where(s => s.ModeratorId.ToString() == userId)
+      .ToList();
   }
 }

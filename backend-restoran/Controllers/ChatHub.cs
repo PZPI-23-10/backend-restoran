@@ -44,6 +44,28 @@ public class ChatHub(ChatSessionStore sessionStore, DataContext dataContext) : H
   }
 
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public List<ActiveChatSession> GetModeratorChatSessions()
+  {
+    var userId = Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      throw new InvalidOperationException("User is not authenticated.");
+
+    return sessionStore.GetSessionsByModerator(userId);
+  }
+
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public List<ActiveChatSession> GetUserChatSessions()
+  {
+    var userId = Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      throw new InvalidOperationException("User is not authenticated.");
+
+    return sessionStore.GetSessionsByUser(userId);
+  }
+
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task JoinChatSession(string sessionId)
   {
     if (sessionStore.TryGetSession(sessionId, out var session))
