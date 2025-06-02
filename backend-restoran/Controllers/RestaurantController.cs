@@ -16,13 +16,15 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 {
   [HttpPost]
   [Route("moderators/random")]
-  public async Task<IActionResult> GetRandomModerator([FromBody] Guid restaurantId)
+  public async Task<IActionResult> GetRandomModerator([FromBody] string restaurantId)
   {
-    if (restaurantId == Guid.Empty)
+    if (string.IsNullOrEmpty(restaurantId))
       return BadRequest("Restaurant ID is required.");
 
+    var restaurantGuid = Guid.Parse(restaurantId);
+    
     var moderators = await dataContext.RestaurantModerators
-      .Where(r => r.Id == restaurantId).ToListAsync();
+      .Where(r => r.Id == restaurantGuid).ToListAsync();
 
     if (moderators.Count == 0)
       return NotFound("No moderators found for this restaurant.");
