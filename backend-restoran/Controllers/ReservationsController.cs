@@ -37,7 +37,7 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
     var reservation = new Reservation
     {
       PeopleCount = request.PeopleCount,
-      StartDate = request.Date,
+      StartDate = request.Date.ToUniversalTime(),
       UserId = userGuid,
       TableId = table.Id
     };
@@ -48,9 +48,10 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
 
     await dataContext.SaveChangesAsync();
 
-    return Ok(userGuid);
+    return Ok(new AddReservationResponse(reservation.Table.TableNumber, reservation.PeopleCount, reservation.StartDate,
+      reservation.Table.RestaurantId));
   }
-  
+
   [HttpGet]
   [Route("ReservationsByUser")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -66,13 +67,13 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
 
     var reservations = await dataContext.Reservations
       .Where(r => r.UserId == userGuid)
-      .Include(r => r.Table)  
-      .Select(r => new 
+      .Include(r => r.Table)
+      .Select(r => new
       {
         ReservationId = r.Id,
         PeopleCount = r.PeopleCount,
         Date = r.StartDate,
-        TableNumber = r.Table.TableNumber,  
+        TableNumber = r.Table.TableNumber,
         RestaurantId = r.Table.RestaurantId
       })
       .ToListAsync();
