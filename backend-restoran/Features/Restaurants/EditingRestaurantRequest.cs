@@ -1,62 +1,24 @@
 ﻿namespace backend_restoran.Features.Restaurants;
 
 public record EditingRestaurantRequest(
-    string RestaurantId,
-    string Name,
-    string City,
-    string Region,
-    string Street,
-    string Description,
-    string Email,
-    string Organization,
-    decimal Latitude,
-    decimal Longitude,
-    bool HasParking,
-    bool Accessible,
-    List<string> Cuisine,
-    List<string> Tags,
-    List<string> ModeratorEmails,
-    List<string> DressCode,
-    List<string> Gallery,
-    List<EditDishDto> Dishes,
-    List<EditLayoutItem> Layout,
-    List<EditScheduleItemDto> Schedule,
-    string PhotoUrl = "");
-
-public record EditDishDto(
-    string PhotoUrl,
-    string Name,
-    string Ingredients,
-    int Price,
-    int Weight
-);
-
-public record EditLayoutItem(
-    int X,
-    int Y,
-    int TypeId,
-    int Id,
-    int Rotation,
-    int Floor
-);
-
-public record EditScheduleItemDto(
-    string Day,
-    bool IsDayOff,
-    string? Open = null,
-    string? Close = null
-);
-
-public enum EditObjectType
-{
-    Wall = 1,
-    Circle,
-    Corner,
-    Door,
-    Window,
-    SeatingForTwo,
-    SeatingForMany,
-    TableWithSofa,
-    BarCounter,
-    Stairs
-};
+  string RestaurantId,
+  string Name,
+  string City,
+  string Region,
+  string Street,
+  string Description,
+  string Email,
+  string Organization,
+  decimal Latitude,
+  decimal Longitude,
+  bool HasParking,
+  bool Accessible,
+  List<string> Cuisine,
+  List<string> Tags,
+  List<string> ModeratorEmails,
+  List<string> DressCode,
+  List<string> Gallery,
+  List<DishDto> Dishes,
+  List<LayoutItem> Layout,
+  List<ScheduleItemDto> Schedule,
+  string PhotoUrl = "");

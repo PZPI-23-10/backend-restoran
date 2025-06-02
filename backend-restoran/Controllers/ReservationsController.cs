@@ -1,9 +1,7 @@
 ﻿using System.Security.Claims;
 using backend_restoran.Features.Restaurants;
-using backend_restoran.Features.Users;
 using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
-using backend_restoran.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

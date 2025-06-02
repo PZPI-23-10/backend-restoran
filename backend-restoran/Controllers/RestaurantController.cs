@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LayoutItem = backend_restoran.Features.Restaurants.LayoutItem;
 
 namespace backend_restoran.Controllers;
 
@@ -28,16 +29,17 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .ToListAsync();
 
     if (moderators.Count == 0)
-      return NotFound("No moderators found for this restaurant.");  
+      return NotFound("No moderators found for this restaurant.");
 
     var random = new Random();
     var randomIndex = random.Next(moderators.Count);
     var moderator = moderators[randomIndex];
 
-    return Ok(new GetRandomModeratorResponse(moderator.UserId, $"{moderator.User.LastName} {moderator.User.FirstName}", moderator.User.Email));
+    return Ok(new GetRandomModeratorResponse(moderator.UserId, $"{moderator.User.LastName} {moderator.User.FirstName}",
+      moderator.User.Email));
   }
 
-  
+
   [HttpPost]
   [Route("Get")]
   public async Task<IActionResult> GetRestaurant([FromBody] GetRestaurantRequest request)
@@ -122,13 +124,14 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       Accessible = request.Accessible,
     };
 
-    await AddRestaurantPhotos(request, restaurant);
-    await AddRestaurantDressCodes(request, restaurant);
-    await AddRestaurantCuisines(request, restaurant);
-    await AddRestaurantTags(request, restaurant);
-    await AddRestaurantModerators(request, restaurant);
-    await AddDishes(request, restaurant);
-    AddSchedule(request, restaurant);
+    AddTables(request.Layout, restaurant);
+    await AddRestaurantPhotos(request.Gallery, restaurant);
+    await AddRestaurantDressCodes(request.DressCode, restaurant);
+    await AddRestaurantCuisines(request.Cuisine, restaurant);
+    await AddRestaurantTags(request.Tags, restaurant);
+    await AddRestaurantModerators(request.ModeratorEmails, restaurant);
+    await AddDishes(request.Dishes, restaurant);
+    AddSchedule(request.Schedule, restaurant);
 
     user.RestaurantsOwned.Add(restaurant);
 
@@ -138,10 +141,32 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     return Ok();
   }
 
-  private async Task AddRestaurantPhotos(CreateRestaurantRequest request, Restaurant restaurant)
+  private void AddTables(List<LayoutItem> layout, Restaurant restaurant)
+  {
+    foreach (var layoutItem in layout)
+    {
+      var isTable = layoutItem.TypeId
+        is (int)ObjectType.SeatingForTwo
+        or (int)ObjectType.SeatingForMany
+        or (int)ObjectType.TableWithSofa;
+
+      if (!isTable)
+        continue;
+
+      var table = new Table
+      {
+        TableNumber = layoutItem.Id,
+        RestaurantId = restaurant.Id,
+      };
+
+      restaurant.Tables.Add(table);
+    }
+  }
+
+  private async Task AddRestaurantPhotos(List<string> requestGallery, Restaurant restaurant)
   {
     var photos = new List<RestaurantPhoto>();
-    foreach (var photoUrl in request.Gallery.Where(url => !string.IsNullOrWhiteSpace(url)))
+    foreach (var photoUrl in requestGallery.Where(url => !string.IsNullOrWhiteSpace(url)))
     {
       photos.Add(new RestaurantPhoto
       {
@@ -154,10 +179,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       restaurant.Photos = photos;
   }
 
-  private async Task AddRestaurantDressCodes(CreateRestaurantRequest request, Restaurant restaurant)
+  private async Task AddRestaurantDressCodes(List<string> requestDressCode, Restaurant restaurant)
   {
     var dressCodes = new List<RestaurantDressCode>();
-    foreach (var tagName in request.DressCode.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
+    foreach (var tagName in requestDressCode.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
     {
       var dressCode = await dataContext.DressCodes
         .FirstOrDefaultAsync(t => t.Name == tagName);
@@ -176,9 +201,9 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       restaurant.DressCodes = dressCodes;
   }
 
-  private static void AddSchedule(CreateRestaurantRequest request, Restaurant restaurant)
+  private static void AddSchedule(List<ScheduleItemDto> requestSchedule, Restaurant restaurant)
   {
-    var schedules = request.Schedule.Select(scheduleDto => new Schedule
+    var schedules = requestSchedule.Select(scheduleDto => new Schedule
       {
         Day = scheduleDto.Day,
         IsDayOff = scheduleDto.IsDayOff,
@@ -191,10 +216,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     restaurant.Schedule = schedules;
   }
 
-  private async Task AddDishes(CreateRestaurantRequest request, Restaurant restaurant)
+  private async Task AddDishes(List<DishDto> requestDishes, Restaurant restaurant)
   {
     var dishes = new List<Dish>();
-    foreach (var dishDto in request.Dishes)
+    foreach (var dishDto in requestDishes)
     {
       var dish = new Dish
       {
@@ -213,10 +238,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       restaurant.Dishes = dishes;
   }
 
-  private async Task AddRestaurantModerators(CreateRestaurantRequest request, Restaurant restaurant)
+  private async Task AddRestaurantModerators(List<string> requestModeratorEmails, Restaurant restaurant)
   {
     var moderators = new List<RestaurantModerator>();
-    foreach (var email in request.ModeratorEmails.Where(email => !string.IsNullOrWhiteSpace(email)))
+    foreach (var email in requestModeratorEmails.Where(email => !string.IsNullOrWhiteSpace(email)))
     {
       var moderator = await dataContext.Users
         .FirstOrDefaultAsync(u => u.Email == email);
@@ -235,10 +260,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       restaurant.Moderators = moderators;
   }
 
-  private async Task AddRestaurantTags(CreateRestaurantRequest request, Restaurant restaurant)
+  private async Task AddRestaurantTags(List<string> requestTags, Restaurant restaurant)
   {
     var tags = new List<RestaurantTag>();
-    foreach (var tagName in request.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
+    foreach (var tagName in requestTags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
     {
       var tag = await dataContext.Tags
         .FirstOrDefaultAsync(t => t.Name == tagName);
@@ -257,10 +282,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       restaurant.Tags = tags;
   }
 
-  private async Task AddRestaurantCuisines(CreateRestaurantRequest request, Restaurant restaurant)
+  private async Task AddRestaurantCuisines(List<string> requestCuisine, Restaurant restaurant)
   {
     var cuisines = new List<RestaurantCuisine>();
-    foreach (var cuisineName in request.Cuisine.Where(cuisineName => !string.IsNullOrWhiteSpace(cuisineName)))
+    foreach (var cuisineName in requestCuisine.Where(cuisineName => !string.IsNullOrWhiteSpace(cuisineName)))
     {
       var cuisine = await dataContext.Cuisines
         .FirstOrDefaultAsync(c => c.Name == cuisineName);
@@ -334,22 +359,17 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
-      .Include(r => r.DressCodes)
+      .Include(r => r.DressCodes).Include(restaurant => restaurant.Tables)
       .FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
 
     if (restaurant == null)
-    {
       return NotFound("Restaurant not found.");
-    }
 
-    bool isOwner = restaurant.UserId == Guid.Parse(userId);
-    bool isModerator = restaurant.Moderators.Any(m => m.UserId == Guid.Parse(userId));
+    var isOwner = restaurant.UserId == Guid.Parse(userId);
+    var isModerator = restaurant.Moderators.Any(m => m.UserId == Guid.Parse(userId));
 
     if (!isOwner && !isModerator)
-    {
       return BadRequest("User does not have permission to edit restaurant.");
-    }
-
 
     restaurant.Name = request.Name;
     restaurant.City = request.City;
@@ -365,166 +385,26 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     restaurant.HasParking = request.HasParking;
     restaurant.Accessible = request.Accessible;
 
-    await EditingRestaurantCuisines(request, restaurant);
-    await EditingRestaurantTags(request, restaurant);
-    await UpdateRestaurantModerators(request, restaurant);
-    await UpdateDishes(request, restaurant);
-    UpdateSchedule(request, restaurant);
-    await UpdateRestaurantPhotos(request, restaurant);
-    await UpdateRestaurantDressCodes(request, restaurant);
+    dataContext.Tables.RemoveRange(restaurant.Tables);
+    dataContext.RestaurantCuisines.RemoveRange(restaurant.Cuisines);
+    dataContext.RestaurantTags.RemoveRange(restaurant.Tags);
+    dataContext.RestaurantModerators.RemoveRange(restaurant.Moderators);
+    dataContext.Dishes.RemoveRange(restaurant.Dishes);
+    dataContext.Schedules.RemoveRange(restaurant.Schedule);
+    dataContext.RestaurantPhotos.RemoveRange(restaurant.Photos);
+    dataContext.RestaurantDressCodes.RemoveRange(restaurant.DressCodes);
+
+    AddTables(request.Layout, restaurant);
+    await AddRestaurantCuisines(request.Cuisine, restaurant);
+    await AddRestaurantTags(request.Tags, restaurant);
+    await AddRestaurantModerators(request.ModeratorEmails, restaurant);
+    await AddDishes(request.Dishes, restaurant);
+    AddSchedule(request.Schedule, restaurant);
+    await AddRestaurantPhotos(request.Gallery, restaurant);
+
+    await AddRestaurantDressCodes(request.DressCode, restaurant);
 
     await dataContext.SaveChangesAsync();
     return Ok();
-  }
-
-  private async Task UpdateRestaurantPhotos(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.RestaurantPhotos.RemoveRange(restaurant.Photos);
-
-    var photos = new List<RestaurantPhoto>();
-    foreach (var photoUrl in request.Gallery.Where(url => !string.IsNullOrWhiteSpace(url)))
-    {
-      photos.Add(new RestaurantPhoto
-      {
-        RestaurantId = restaurant.Id,
-        Url = photoUrl
-      });
-    }
-
-    restaurant.Photos = photos;
-  }
-
-  private async Task UpdateRestaurantDressCodes(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.RestaurantDressCodes.RemoveRange(restaurant.DressCodes);
-
-    var dressCodes = new List<RestaurantDressCode>();
-    foreach (var dressCodeName in request.DressCode.Where(dc => !string.IsNullOrWhiteSpace(dc)))
-    {
-      var dressCode = await dataContext.DressCodes
-        .FirstOrDefaultAsync(dc => dc.Name == dressCodeName);
-
-      if (dressCode == null) continue;
-
-      dressCodes.Add(new RestaurantDressCode
-      {
-        RestaurantId = restaurant.Id,
-        DressCodeId = dressCode.Id
-      });
-    }
-
-    restaurant.DressCodes = dressCodes;
-  }
-
-  private async Task EditingRestaurantCuisines(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.RestaurantCuisines.RemoveRange(restaurant.Cuisines);
-
-    var cuisines = new List<RestaurantCuisine>();
-    foreach (var cuisineName in request.Cuisine.Where(cuisineName => !string.IsNullOrWhiteSpace(cuisineName)))
-    {
-      var cuisine = await dataContext.Cuisines.FirstOrDefaultAsync(c => c.Name == cuisineName);
-
-      if (cuisine == null)
-      {
-        cuisine = new Cuisine { Name = cuisineName };
-        dataContext.Cuisines.Add(cuisine);
-      }
-
-      cuisines.Add(new RestaurantCuisine
-      {
-        RestaurantId = restaurant.Id,
-        CuisineId = cuisine.Id
-      });
-    }
-
-    restaurant.Cuisines = cuisines;
-  }
-
-  private async Task EditingRestaurantTags(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.RestaurantTags.RemoveRange(restaurant.Tags);
-
-    var tags = new List<RestaurantTag>();
-    foreach (var tagName in request.Tags.Where(tagName => !string.IsNullOrWhiteSpace(tagName)))
-    {
-      var tag = await dataContext.Tags.FirstOrDefaultAsync(tag => tag.Name == tagName);
-
-      if (tag == null)
-      {
-        tag = new Tag() { Name = tagName };
-        dataContext.Tags.Add(tag);
-      }
-
-      tags.Add(new RestaurantTag
-      {
-        RestaurantId = restaurant.Id,
-        TagId = tag.Id
-      });
-    }
-
-    restaurant.Tags = tags;
-  }
-
-
-  private async Task UpdateRestaurantModerators(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.RestaurantModerators.RemoveRange(restaurant.Moderators);
-
-    var moderators = new List<RestaurantModerator>();
-    foreach (var email in request.ModeratorEmails.Where(e => !string.IsNullOrWhiteSpace(e)))
-    {
-      var moderator = await dataContext.Users
-        .FirstOrDefaultAsync(u => u.Email == email);
-
-      if (moderator == null) continue;
-
-      moderators.Add(new RestaurantModerator
-      {
-        RestaurantId = restaurant.Id,
-        UserId = moderator.Id
-      });
-    }
-
-    restaurant.Moderators = moderators;
-  }
-
-  private async Task UpdateDishes(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.Dishes.RemoveRange(restaurant.Dishes);
-
-    var dishes = new List<Dish>();
-    foreach (var dishDto in request.Dishes)
-    {
-      var dish = new Dish
-      {
-        Title = dishDto.Name,
-        PhotoUrl = dishDto.PhotoUrl,
-        Ingredients = dishDto.Ingredients,
-        Price = dishDto.Price,
-        Weight = dishDto.Weight,
-        RestaurantId = restaurant.Id,
-      };
-
-      dishes.Add(dish);
-    }
-
-    restaurant.Dishes = dishes;
-  }
-
-  private void UpdateSchedule(EditingRestaurantRequest request, Restaurant restaurant)
-  {
-    dataContext.Schedules.RemoveRange(restaurant.Schedule);
-
-    var schedules = request.Schedule.Select(s => new Schedule
-    {
-      Day = s.Day,
-      IsDayOff = s.IsDayOff,
-      Open = s.Open,
-      Close = s.Close,
-      RestaurantId = restaurant.Id,
-    }).ToList();
-
-    restaurant.Schedule = schedules;
   }
 }

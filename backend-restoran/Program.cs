@@ -115,12 +115,13 @@ public static class Program
           .AllowAnyHeader()
           .AllowAnyMethod();
       });
-      
-      var allowedOrigins = new[] {
+
+      var allowedOrigins = new[]
+      {
         "http://localhost:56082",
         "https://your-production-client.com"
       };
-      
+
       options.AddPolicy("CorsPolicy", builder =>
       {
         builder
@@ -154,7 +155,7 @@ public static class Program
 
     app.UseCors("AllowSwagger");
     app.UseCors("AllowSpecificOrigins");
-    
+
     app.UseAuthorization();
     app.UseAuthentication();
     app.UseErrorHandler();
