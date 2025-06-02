@@ -121,6 +121,14 @@ public static class Program
         "https://your-production-client.com"
       };
       
+      options.AddPolicy("CorsPolicy", builder =>
+      {
+        builder
+          .WithOrigins(allowedOrigins)
+          .AllowAnyHeader()
+          .AllowAnyMethod()
+          .AllowCredentials(); // ВАЖНО: разрешаем отправку cookie/token
+      });
     });
 
     builder.Services.ConfigureDatabase(builder.Configuration);
@@ -145,6 +153,8 @@ public static class Program
     app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
     app.UseCors("AllowSwagger");
+    app.UseCors("AllowSpecificOrigins");
+    
     app.UseAuthorization();
     app.UseAuthentication();
     app.UseErrorHandler();
