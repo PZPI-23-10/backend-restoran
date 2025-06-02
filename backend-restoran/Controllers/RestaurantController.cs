@@ -21,19 +21,15 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     if (restaurantId == Guid.Empty)
       return BadRequest("Restaurant ID is required.");
 
-    var restaurant = await dataContext.Restaurants
-      .Include(r => r.Moderators)
-      .FirstOrDefaultAsync(r => r.Id == restaurantId);
+    var moderators = await dataContext.RestaurantModerators
+      .Where(r => r.Id == restaurantId).ToListAsync();
 
-    if (restaurant == null)
-      return NotFound("Restaurant not found.");
-
-    if (restaurant.Moderators.Count == 0)
+    if (moderators.Count == 0)
       return NotFound("No moderators found for this restaurant.");
 
     var random = new Random();
-    var randomIndex = random.Next(restaurant.Moderators.Count);
-    var moderator = restaurant.Moderators[randomIndex];
+    var randomIndex = random.Next(moderators.Count);
+    var moderator = moderators[randomIndex];
 
     return Ok(moderator.UserId);
   }
