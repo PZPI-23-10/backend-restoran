@@ -84,7 +84,7 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
     return Ok(reservations);
   }
   
-  [HttpDelete("DeleteReservation")]
+  [HttpDelete("{reservationId}")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> CancelReservation(Guid reservationId)
   {
