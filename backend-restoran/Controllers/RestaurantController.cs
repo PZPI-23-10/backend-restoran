@@ -77,14 +77,13 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .AsNoTracking()
       .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
       .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
-      .Include(r => r.Dishes)
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.DressCodes).ThenInclude(x => x.DressCode)
       .Skip((page - 1) * pageSize)
       .Take(pageSize)
       .ToListAsync();
-
+    
     return Ok(restaurants);
   }
 
