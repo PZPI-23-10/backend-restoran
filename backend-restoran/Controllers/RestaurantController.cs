@@ -14,6 +14,30 @@ namespace backend_restoran.Controllers;
 [Route("api/[controller]")]
 public class RestaurantController(DataContext dataContext) : ControllerBase
 {
+  [HttpGet]
+  [Route("moderators/random")]
+  public async Task<IActionResult> GetRandomModerator([FromBody] Guid restaurantId)
+  {
+    if (restaurantId == Guid.Empty)
+      return BadRequest("Restaurant ID is required.");
+
+    var restaurant = await dataContext.Restaurants
+      .Include(r => r.Moderators)
+      .FirstOrDefaultAsync(r => r.Id == restaurantId);
+
+    if (restaurant == null)
+      return NotFound("Restaurant not found.");
+
+    if (restaurant.Moderators.Count == 0)
+      return NotFound("No moderators found for this restaurant.");
+
+    var random = new Random();
+    var randomIndex = random.Next(restaurant.Moderators.Count);
+    var moderator = restaurant.Moderators[randomIndex];
+
+    return Ok(moderator.UserId);
+  }
+
   [HttpPost]
   [Route("Get")]
   public async Task<IActionResult> GetRestaurant([FromBody] GetRestaurantRequest request)
