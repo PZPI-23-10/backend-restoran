@@ -48,8 +48,7 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
 
     await dataContext.SaveChangesAsync();
 
-    return Ok(new AddReservationResponse(reservation.Table.TableNumber, reservation.PeopleCount, reservation.StartDate,
-      reservation.Table.RestaurantId));
+    return Ok(new AddReservationResponse(table.TableNumber, reservation.PeopleCount, reservation.StartDate, table.RestaurantId));
   }
 
   [HttpGet]
