@@ -24,6 +24,7 @@ public class DataContext : DbContext
   public DbSet<Review> Reviews { get; set; }
   public DbSet<Table> Tables { get; set; }
   public DbSet<Reservation> Reservations { get; set; }
+  public DbSet<Device> Devices { get; set; }
 
   public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
   {
@@ -65,6 +66,16 @@ public class DataContext : DbContext
     ConfigureReviews(modelBuilder);
     ConfigureOrders(modelBuilder);
     ConfigureTables(modelBuilder);
+    ConfigureDevices(modelBuilder);
+  }
+
+  private static void ConfigureDevices(ModelBuilder modelBuilder)
+  {
+    modelBuilder.Entity<Device>()
+      .HasOne(d => d.User)
+      .WithMany(u => u.Devices)
+      .HasForeignKey(d => d.UserId)
+      .OnDelete(DeleteBehavior.Cascade);
   }
 
   private void ConfigureTables(ModelBuilder modelBuilder)

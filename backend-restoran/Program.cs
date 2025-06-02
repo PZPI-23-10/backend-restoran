@@ -128,7 +128,7 @@ public static class Program
           .WithOrigins(allowedOrigins)
           .AllowAnyHeader()
           .AllowAnyMethod()
-          .AllowCredentials(); // ВАЖНО: разрешаем отправку cookie/token
+          .AllowCredentials();
       });
     });
 
@@ -138,6 +138,7 @@ public static class Program
     builder.Services.AddSignalR();
     builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
     builder.Services.AddSingleton<ChatSessionStore>();
+    builder.Services.AddSingleton<FirebaseService>();
 
     var app = builder.Build();
 

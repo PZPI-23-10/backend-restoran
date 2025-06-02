@@ -2,6 +2,7 @@
 using backend_restoran.Features.Restaurants;
 using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
+using backend_restoran.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ namespace backend_restoran.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ReservationsController(DataContext dataContext) : ControllerBase
+public class ReservationsController(DataContext dataContext, FirebaseService firebaseService) : ControllerBase
 {
   [HttpPost]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -28,8 +29,9 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
     if (!await dataContext.Users.AnyAsync(user => user.Id == userGuid))
       return NotFound("User not found.");
 
-    var table = await dataContext.Tables.FirstOrDefaultAsync(t =>
-      t.RestaurantId == request.RestaurantId && !t.IsTaken);
+    var table = await dataContext.Tables
+      .Include(x => x.Restaurant)
+      .FirstOrDefaultAsync(t => t.RestaurantId == request.RestaurantId && !t.IsTaken);
 
     if (table == null)
       return NotFound("Table not found.");
@@ -48,7 +50,18 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
 
     await dataContext.SaveChangesAsync();
 
-    return Ok(new AddReservationResponse(table.TableNumber, reservation.PeopleCount, reservation.StartDate, table.RestaurantId));
+    var deviceTokens = dataContext.Devices
+      .Where(d => d.UserId == userGuid);
+
+    foreach (var device in deviceTokens)
+    {
+      await firebaseService.SendNotificationAsync(device.DeviceToken, "Бронювання підтверджено",
+        $"Ви успішно забронювали місце {table.TableNumber}, у {table.Restaurant.Name}"
+      );
+    }
+
+    return Ok(new AddReservationResponse(table.TableNumber, reservation.PeopleCount, reservation.StartDate,
+      table.RestaurantId));
   }
 
   [HttpGet]
@@ -83,7 +96,7 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
 
     return Ok(reservations);
   }
-  
+
   [HttpDelete("{reservationId}")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> CancelReservation(Guid reservationId)
@@ -97,7 +110,7 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
       return BadRequest("Invalid User ID format.");
 
     var reservation = await dataContext.Reservations
-      .Include(r => r.Table) 
+      .Include(r => r.Table)
       .FirstOrDefaultAsync(r => r.Id == reservationId && r.UserId == userGuid);
 
     if (reservation == null)

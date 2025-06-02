@@ -19,6 +19,38 @@ namespace backend_restoran.Controllers;
 public class AccountController(DataContext dataContext, TokenService tokenService, IConfiguration configuration)
   : ControllerBase
 {
+  [HttpPost("android/registerDevice")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> RegisterUserDevice(RegisterDeviceRequest request)
+  {
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return Unauthorized("User ID not found in token.");
+
+    var userGuid = Guid.Parse(userId);
+    var user = await dataContext.Users.FirstOrDefaultAsync(x => x.Id == userGuid);
+
+    if (user == null)
+      return NotFound("User not found.");
+
+    var deviceExists = await dataContext.Devices.AnyAsync(d => d.DeviceToken == request.Token);
+
+    if (deviceExists)
+      return Ok("Device already registered.");
+
+    var device = new Device
+    {
+      DeviceToken = request.Token,
+      UserId = userGuid
+    };
+
+    await dataContext.Devices.AddAsync(device);
+    await dataContext.SaveChangesAsync();
+
+    return Ok("Device registered successfully.");
+  }
+
   [HttpPost]
   public async Task<IActionResult> GetUser([FromBody] GetUserRequest request)
   {
