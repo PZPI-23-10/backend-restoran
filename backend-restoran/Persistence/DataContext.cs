@@ -63,6 +63,8 @@ public class DataContext : DbContext
     ConfigureRestaurantModerator(modelBuilder);
     ConfigureRestaurantTag(modelBuilder);
     ConfigureReviews(modelBuilder);
+    ConfigureOrders(modelBuilder);
+    ConfigureTables(modelBuilder);
   }
 
   private void ConfigureTables(ModelBuilder modelBuilder)
