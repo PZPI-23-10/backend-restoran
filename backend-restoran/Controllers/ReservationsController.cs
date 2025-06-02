@@ -73,14 +73,18 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
         PeopleCount = r.PeopleCount,
         Date = r.StartDate,
         TableNumber = r.Table.TableNumber,
-        RestaurantId = r.Table.RestaurantId
+        RestaurantName = r.Table.Restaurant.Name,
+        RestaurantPhoto = r.Table.Restaurant.PhotoUrl,
+        RestaurantCity = r.Table.Restaurant.City,
+        RestaurantRegion = r.Table.Restaurant.Region,
+        RestaurantStreet = r.Table.Restaurant.Street,
       })
       .ToListAsync();
 
     return Ok(reservations);
   }
   
-  [HttpDelete("{reservationId}")]
+  [HttpDelete("DeleteReservation")]
   [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
   public async Task<IActionResult> CancelReservation(Guid reservationId)
   {
