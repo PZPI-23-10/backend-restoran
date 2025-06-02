@@ -35,7 +35,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
-      .Include( r => r.DressCodes).ThenInclude(rd => rd.DressCode)
+      .Include(r => r.DressCodes).ThenInclude(rd => rd.DressCode)
       .FirstOrDefaultAsync(r => r.Id == restaurantId);
 
     if (restaurant == null)
@@ -45,9 +45,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
   }
 
   [HttpGet]
-  public async Task<IActionResult> GetRestaurants()
+  public async Task<IActionResult> GetRestaurants([FromQuery] int page = 1, [FromQuery] int pageSize = 2)
   {
     var restaurants = await dataContext.Restaurants
+      .AsNoTracking()
       .Include(r => r.User)
       .Include(r => r.Cuisines).ThenInclude(rc => rc.Cuisine)
       .Include(r => r.Tags).ThenInclude(rt => rt.Tag)
@@ -56,7 +57,9 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
-      .Include( r => r.DressCodes).ThenInclude(x => x.DressCode)
+      .Include(r => r.DressCodes).ThenInclude(x => x.DressCode)
+      .Skip((page - 1) * pageSize)
+      .Take(pageSize)
       .ToListAsync();
 
     return Ok(restaurants);
@@ -307,7 +310,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       .Include(r => r.Schedule)
       .Include(r => r.Reviews)
       .Include(r => r.Photos)
-      .Include( r => r.DressCodes)
+      .Include(r => r.DressCodes)
       .FirstOrDefaultAsync(x => x.Id == Guid.Parse(request.RestaurantId));
 
     if (restaurant == null)
@@ -317,7 +320,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
     bool isOwner = restaurant.UserId == Guid.Parse(userId);
     bool isModerator = restaurant.Moderators.Any(m => m.UserId == Guid.Parse(userId));
-      
+
     if (!isOwner && !isModerator)
     {
       return BadRequest("User does not have permission to edit restaurant.");
@@ -353,7 +356,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
   private async Task UpdateRestaurantPhotos(EditingRestaurantRequest request, Restaurant restaurant)
   {
     dataContext.RestaurantPhotos.RemoveRange(restaurant.Photos);
- 
+
     var photos = new List<RestaurantPhoto>();
     foreach (var photoUrl in request.Gallery.Where(url => !string.IsNullOrWhiteSpace(url)))
     {
@@ -363,7 +366,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
         Url = photoUrl
       });
     }
-    
+
     restaurant.Photos = photos;
   }
 
@@ -500,7 +503,4 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 
     restaurant.Schedule = schedules;
   }
-  
-  
-  
 }
