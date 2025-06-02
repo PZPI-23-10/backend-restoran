@@ -23,10 +23,10 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
       return BadRequest("Restaurant ID is required.");
 
     var moderators = await dataContext.RestaurantModerators
-      .Where(r => r.Id == request.RestaurantId).ToListAsync();
+      .Where(r => r.RestaurantId == request.RestaurantId).ToListAsync();
 
     if (moderators.Count == 0)
-      return NotFound("No moderators found for this restaurant.");
+      return NotFound("No moderators found for this restaurant.");  
 
     var random = new Random();
     var randomIndex = random.Next(moderators.Count);
