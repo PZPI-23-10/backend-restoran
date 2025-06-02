@@ -79,4 +79,32 @@ public class ReservationsController(DataContext dataContext) : ControllerBase
 
     return Ok(reservations);
   }
+  
+  [HttpDelete("{reservationId}")]
+  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+  public async Task<IActionResult> CancelReservation(Guid reservationId)
+  {
+    var userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (string.IsNullOrEmpty(userId))
+      return BadRequest("User ID is required.");
+
+    if (!Guid.TryParse(userId, out var userGuid))
+      return BadRequest("Invalid User ID format.");
+
+    var reservation = await dataContext.Reservations
+      .Include(r => r.Table) 
+      .FirstOrDefaultAsync(r => r.Id == reservationId && r.UserId == userGuid);
+
+    if (reservation == null)
+      return NotFound("Reservation not found or you don't have permission to cancel it.");
+
+    reservation.Table.IsTaken = false;
+
+    dataContext.Reservations.Remove(reservation);
+
+    await dataContext.SaveChangesAsync();
+
+    return Ok("Reservation canceled successfully.");
+  }
 }
