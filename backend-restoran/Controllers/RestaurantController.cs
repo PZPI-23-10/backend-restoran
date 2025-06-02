@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using backend_restoran.Extensions;
+using backend_restoran.Features;
 using backend_restoran.Features.Restaurants;
 using backend_restoran.Persistence;
 using backend_restoran.Persistence.Models;
@@ -16,15 +17,13 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
 {
   [HttpPost]
   [Route("moderators/random")]
-  public async Task<IActionResult> GetRandomModerator([FromBody] string restaurantId)
+  public async Task<IActionResult> GetRandomModerator([FromBody] GetRandomModeratorRequest request)
   {
-    if (string.IsNullOrEmpty(restaurantId))
+    if (request.RestaurantId == Guid.Empty)
       return BadRequest("Restaurant ID is required.");
 
-    var restaurantGuid = Guid.Parse(restaurantId);
-    
     var moderators = await dataContext.RestaurantModerators
-      .Where(r => r.Id == restaurantGuid).ToListAsync();
+      .Where(r => r.Id == request.RestaurantId).ToListAsync();
 
     if (moderators.Count == 0)
       return NotFound("No moderators found for this restaurant.");
@@ -36,6 +35,7 @@ public class RestaurantController(DataContext dataContext) : ControllerBase
     return Ok(moderator.UserId);
   }
 
+  
   [HttpPost]
   [Route("Get")]
   public async Task<IActionResult> GetRestaurant([FromBody] GetRestaurantRequest request)
